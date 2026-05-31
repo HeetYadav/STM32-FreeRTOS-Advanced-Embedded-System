@@ -1,4 +1,4 @@
-﻿FreeRTOS Explained: From First Principles to Our Implementation
+﻿# FreeRTOS Explained: From First Principles to Our Implementation
 
 > **Navigation**: [â† 02 Bootloader Deep Dive](02_bootloader.md) | [Home](../README.md) | [04 PWM & LED Control â†’](04_pwm_led_control.md)
 
