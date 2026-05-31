@@ -1,4 +1,4 @@
-# 05 — Hardware PWM & LED Control
+# Hardware PWM & LED Control
 
 > **Document Version**: 1.0 | **Target MCU**: STM32L476RG | **Timers Used**: TIM1, TIM2, TIM3 (PWM) + TIM5 (Ultrasonic timing)
 
