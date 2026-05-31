@@ -95,7 +95,8 @@ Type 'help' for commands.
 [HW-201] WARNING! OBSTACLE DETECTED!
 [HW-201] Obstacle Removed.
 ```
-<img width="1919" height="1079" alt="Screenshot 2026-05-31 194216" src="https://github.com/user-attachments/assets/cbd251d2-da02-4440-b7a0-81ab5bab434f" />
+<img width="1913" height="1079" alt="Screenshot 2026-05-31 194029" src="https://github.com/user-attachments/assets/522698ed-9411-4755-a91d-d396c60b9c14" />
+
 
 ### CLI Command Reference
 
