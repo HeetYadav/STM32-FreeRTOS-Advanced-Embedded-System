@@ -21,7 +21,7 @@
 
 ## 1. What is PWM?
 
-**Pulse Width Modulation (PWM)** is a technique for controlling the *average power* delivered to a load by rapidly switching a digital output ON and OFF. The CPU doesn't output an analog voltage — it outputs a square wave. The ratio of time spent HIGH to the total period is called the **duty cycle**, and it determines how bright an LED appears, how fast a motor spins, or how loud a buzzer sounds.
+**Pulse Width Modulation (PWM)** is a technique for controlling the *average power* delivered to a load by rapidly switching a digital output ON and OFF. The CPU doesn't output an analog voltage: it outputs a square wave. The ratio of time spent HIGH to the total period is called the **duty cycle**, and it determines how bright an LED appears, how fast a motor spins, or how loud a buzzer sounds.
 
 ```
 Duty Cycle = (Time HIGH / Period) × 100%
@@ -30,27 +30,27 @@ Duty Cycle = (Time HIGH / Period) × 100%
 Here's how different duty cycles look as waveforms:
 
 ```
-0% — Always OFF
+0%: Always OFF
 _________________________________________________________
                                                         
 
-25% — ON for 1/4 of each period
+25%: ON for 1/4 of each period
 ‾‾‾‾‾_______________‾‾‾‾‾_______________‾‾‾‾‾___________
  ON  |     OFF      | ON  |     OFF      | ON  |
 
-50% — ON for half of each period (half brightness)
+50%: ON for half of each period (half brightness)
 ‾‾‾‾‾‾‾‾‾‾__________‾‾‾‾‾‾‾‾‾‾__________‾‾‾‾‾‾‾‾‾‾______
    ON      |  OFF   |   ON      |  OFF   |   ON
 
-75% — ON for 3/4 of each period (bright)
+75%: ON for 3/4 of each period (bright)
 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾____‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾____‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾___
       ON         |OF|      ON         |OF|      ON
 
-100% — Always ON
+100%: Always ON
 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 ```
 
-Because LEDs respond to average current, and human eyes have persistence of vision, a 50% duty cycle at 1 kHz looks like a LED at half brightness — even though it is technically blinking 1,000 times per second, far too fast to perceive.
+Because LEDs respond to average current, and human eyes have persistence of vision, a 50% duty cycle at 1 kHz looks like a LED at half brightness: even though it is technically blinking 1,000 times per second, far too fast to perceive.
 
 > [!NOTE]
 > PWM is not limited to LEDs. The same technique drives servo motors (by pulse width, not duty cycle), DC motors (by average voltage), audio DACs (1-bit audio output), switching power supplies, and heater elements. Mastering PWM on an STM32 opens the door to most actuator control applications.
@@ -62,7 +62,7 @@ Because LEDs respond to average current, and human eyes have persistence of visi
 Software PWM means your CPU manually toggles a GPIO pin in a loop or timer ISR:
 
 ```c
-// ❌ Software PWM — do NOT do this in a real-time system
+// ❌ Software PWM: do NOT do this in a real-time system
 while (1) {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);    // LED ON
     delay_us(750);  // 75% duty cycle high time
@@ -84,11 +84,11 @@ This approach has fatal problems in an RTOS environment:
 **Hardware PWM** offloads all waveform generation to a dedicated timer peripheral:
 
 ```c
-// ✅ Hardware PWM — the timer does everything after this one call
+// ✅ Hardware PWM: the timer does everything after this one call
 __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 750);  // 75% duty cycle, set and forget
 ```
 
-Once configured, the timer peripheral generates the waveform **autonomously** — no CPU, no interrupts, no jitter. The FreeRTOS scheduler and all other tasks run at full speed completely unaffected. Changing the brightness is a single register write that takes effect immediately on the next PWM cycle.
+Once configured, the timer peripheral generates the waveform **autonomously**: no CPU, no interrupts, no jitter. The FreeRTOS scheduler and all other tasks run at full speed completely unaffected. Changing the brightness is a single register write that takes effect immediately on the next PWM cycle.
 
 ---
 
@@ -107,10 +107,10 @@ STM32L476RG Timer Hierarchy
 │
 ├── TIM2  (General Purpose, 32-bit)
 │     • APB1 bus (up to 80 MHz after x2 multiplier)
-│     • 32-bit counter — unique among GP timers, ideal for long timing intervals
+│     • 32-bit counter: unique among GP timers, ideal for long timing intervals
 │     • Channels: CH1=PA0, CH2=PB3, CH3=PA2, CH4=PA3
 │     • We use: CH2 → PB3 → LED3 PWM
-│     • ⚠️ Originally used for ultrasonic timing — caused a conflict (see §6)
+│     • ⚠️ Originally used for ultrasonic timing: caused a conflict (see §6)
 │
 ├── TIM3  (General Purpose, 16-bit)
 │     • APB1 bus (up to 80 MHz after x2 multiplier)
@@ -120,7 +120,7 @@ STM32L476RG Timer Hierarchy
 └── TIM5  (General Purpose, 32-bit)
       • APB1 bus
       • Repurposed as 1 MHz microsecond stopwatch for HC-SR04 echo timing
-      • No PWM channels used — purely counter mode
+      • No PWM channels used: purely counter mode
       • No GPIO conflict with LED pins
 ```
 
@@ -130,7 +130,7 @@ STM32L476RG Timer Hierarchy
 // When HAL_TIM_PWM_Start() is called for TIM3_CH1, HAL internally does:
 // 1. Configure PB4 as AF2 (Alternate Function 2 = TIM3)
 // 2. Enable the timer's PWM output on CH1
-// PB4 now outputs the timer waveform — no CPU involvement needed
+// PB4 now outputs the timer waveform: no CPU involvement needed
 GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;  // AF2 maps to TIM3 on PB4
 ```
 
@@ -138,14 +138,14 @@ GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;  // AF2 maps to TIM3 on PB4
 
 ## 4. Timer Configuration Table
 
-All four PWM channels are configured identically for simplicity: 1 kHz output frequency, 0–1000 CCR range (providing 0.1% brightness resolution).
+All four PWM channels are configured identically for simplicity: 1 kHz output frequency, 0:1000 CCR range (providing 0.1% brightness resolution).
 
 | Timer | Channel | GPIO Pin | LED | APB Bus | Prescaler | ARR (Period) | PWM Frequency | CCR Range |
 |-------|---------|----------|-----|---------|-----------|--------------|---------------|-----------|
-| TIM1  | CH1     | PA8      | LED4 (farthest) | APB2 | 79 | 1000 | 1 kHz | 0–1000 |
-| TIM2  | CH2     | PB3      | LED3            | APB1 | 79 | 1000 | 1 kHz | 0–1000 |
-| TIM3  | CH1     | PB4      | LED1 (nearest)  | APB1 | 79 | 1000 | 1 kHz | 0–1000 |
-| TIM3  | CH2     | PB5      | LED2            | APB1 | 79 | 1000 | 1 kHz | 0–1000 |
+| TIM1  | CH1     | PA8      | LED4 (farthest) | APB2 | 79 | 1000 | 1 kHz | 0:1000 |
+| TIM2  | CH2     | PB3      | LED3            | APB1 | 79 | 1000 | 1 kHz | 0:1000 |
+| TIM3  | CH1     | PB4      | LED1 (nearest)  | APB1 | 79 | 1000 | 1 kHz | 0:1000 |
+| TIM3  | CH2     | PB5      | LED2            | APB1 | 79 | 1000 | 1 kHz | 0:1000 |
 
 **Frequency calculation:**
 
@@ -158,7 +158,7 @@ CCR=500     → 500/1000 = 50% duty cycle → half brightness
 ```
 
 > [!TIP]
-> Using ARR=1000 (instead of, say, ARR=255) gives **0.1% brightness resolution** — 1001 discrete levels instead of 256. This produces visually smooth fading without any perceptible stepping, which matters for the cascade distance effect.
+> Using ARR=1000 (instead of, say, ARR=255) gives **0.1% brightness resolution**: 1001 discrete levels instead of 256. This produces visually smooth fading without any perceptible stepping, which matters for the cascade distance effect.
 
 ---
 
@@ -166,21 +166,21 @@ CCR=500     → 500/1000 = 50% duty cycle → half brightness
 
 PWM frequency selection involves two competing constraints:
 
-**Lower bound — flicker threshold:**
+**Lower bound: flicker threshold:**
 
-The human visual system perceives flicker below approximately 50–60 Hz. At 100 Hz, most people see flicker in peripheral vision. At 500 Hz, it's invisible to all humans. Our 1 kHz is well clear of any perceptible flicker.
+The human visual system perceives flicker below approximately 50:60 Hz. At 100 Hz, most people see flicker in peripheral vision. At 500 Hz, it's invisible to all humans. Our 1 kHz is well clear of any perceptible flicker.
 
-**Upper bound — audible noise:**
+**Upper bound: audible noise:**
 
-Components on PCBs (capacitors, inductors, even LED driver circuits) can resonate at audible frequencies (20 Hz – 20 kHz). A PWM signal in this range causes a physical vibration that you can hear as a whine or buzz. At 1 kHz, this is theoretically within audible range — but bare LEDs without inductive loads produce no audible noise at this frequency. For applications with motors or inductors, pushing PWM above 20 kHz (supersonic) eliminates audible noise entirely.
+Components on PCBs (capacitors, inductors, even LED driver circuits) can resonate at audible frequencies (20 Hz: 20 kHz). A PWM signal in this range causes a physical vibration that you can hear as a whine or buzz. At 1 kHz, this is theoretically within audible range: but bare LEDs without inductive loads produce no audible noise at this frequency. For applications with motors or inductors, pushing PWM above 20 kHz (supersonic) eliminates audible noise entirely.
 
-**Our choice — 1 kHz:**
+**Our choice: 1 kHz:**
 
-- ✅ Well above 60 Hz flicker threshold — no visible flicker
-- ✅ No inductive loads in our circuit — no audible noise concern
+- ✅ Well above 60 Hz flicker threshold: no visible flicker
+- ✅ No inductive loads in our circuit: no audible noise concern
 - ✅ Simple math: prescaler=79, ARR=1000 gives exactly 1 kHz with a 1 MHz timer clock
-- ✅ CCR range 0–1000 gives convenient 0.1% resolution
-- ✅ Timer counts to 1000 in 1 ms — same order of magnitude as FreeRTOS 1 ms tick
+- ✅ CCR range 0:1000 gives convenient 0.1% resolution
+- ✅ Timer counts to 1000 in 1 ms: same order of magnitude as FreeRTOS 1 ms tick
 
 ---
 
@@ -190,7 +190,7 @@ Components on PCBs (capacitors, inductors, even LED driver circuits) can resonat
 
 During development, the original plan was to use **TIM2** for measuring HC-SR04 ultrasonic echo pulses (running at 1 MHz for microsecond-accuracy timing), and **TIM2_CH2 on PB3** for LED3 PWM. Both features worked independently during unit testing.
 
-When integrated, however, **LED3 never lit up** — its PWM output was silent — while the ultrasonic sensor worked fine.
+When integrated, however, **LED3 never lit up**: its PWM output was silent: while the ultrasonic sensor worked fine.
 
 ### Investigation
 
@@ -199,7 +199,7 @@ Checking the STM32L476 Reference Manual (RM0351) revealed the fundamental proble
 1. Run as a free-running 1 MHz counter (for echo pulse measurement), AND
 2. Generate a PWM waveform on one of its capture/compare channels
 
-These are mutually exclusive modes. The timer's counter drives all channels — if the counter is configured for input capture / free-running, the PWM output channel cannot generate a clean waveform.
+These are mutually exclusive modes. The timer's counter drives all channels: if the counter is configured for input capture / free-running, the PWM output channel cannot generate a clean waveform.
 
 ### Root Cause
 
@@ -207,20 +207,20 @@ Timer resources on STM32 (and all microcontrollers) are shared between the count
 
 ### Resolution
 
-Migrate the ultrasonic echo timing to **TIM5** — a 32-bit general purpose timer with no GPIO pins required for our use case (we only need its counter, not its output channels).
+Migrate the ultrasonic echo timing to **TIM5**: a 32-bit general purpose timer with no GPIO pins required for our use case (we only need its counter, not its output channels).
 
 | | Before | After |
 |---|---|---|
 | Ultrasonic timing | TIM2 (free-running, 1 MHz) | **TIM5** (free-running, 1 MHz) |
-| LED3 PWM | TIM2_CH2 / PB3 — **broken** | TIM2_CH2 / PB3 — **works** |
+| LED3 PWM | TIM2_CH2 / PB3: **broken** | TIM2_CH2 / PB3: **works** |
 | LED1 PWM | TIM3_CH1 / PB4 | TIM3_CH1 / PB4 (unchanged) |
 | LED2 PWM | TIM3_CH2 / PB5 | TIM3_CH2 / PB5 (unchanged) |
 | LED4 PWM | TIM1_CH1 / PA8 | TIM1_CH1 / PA8 (unchanged) |
 
-TIM5 is 32-bit (counts to 4,294,967,295) — ideal for echo timing because HC-SR04 echoes can be up to ~38 ms long, requiring a minimum counter range of 38,000 ticks at 1 MHz. A 16-bit timer (max 65,535 at 1 MHz = 65.5 ms) would technically work but TIM5's 32-bit range gives comfortable headroom.
+TIM5 is 32-bit (counts to 4,294,967,295): ideal for echo timing because HC-SR04 echoes can be up to ~38 ms long, requiring a minimum counter range of 38,000 ticks at 1 MHz. A 16-bit timer (max 65,535 at 1 MHz = 65.5 ms) would technically work but TIM5's 32-bit range gives comfortable headroom.
 
 > [!IMPORTANT]
-> Always check the full **Alternate Function mapping table** in the MCU datasheet *before* assigning timers to pins. This is a common mistake in STM32 projects — two features look independent on paper but share the same hardware resource.
+> Always check the full **Alternate Function mapping table** in the MCU datasheet *before* assigning timers to pins. This is a common mistake in STM32 projects: two features look independent on paper but share the same hardware resource.
 
 ---
 
@@ -262,21 +262,21 @@ void MX_PWM_Init(void)
     // This gives duty cycle = CCR / (ARR+1) * 100%
     sConfigOC.OCMode       = TIM_OCMODE_PWM1;
     sConfigOC.Pulse        = 0;               // Start at 0% duty cycle (LED off)
-    sConfigOC.OCPolarity   = TIM_OCPOLARITY_HIGH;  // Active HIGH — LED anode to 3.3V
+    sConfigOC.OCPolarity   = TIM_OCPOLARITY_HIGH;  // Active HIGH: LED anode to 3.3V
     sConfigOC.OCFastMode   = TIM_OCFAST_DISABLE;
 
     HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1);  // PB4 → LED1
     HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2);  // PB5 → LED2
-    // Note: same sConfigOC used for both channels — both start at 0%
+    // Note: same sConfigOC used for both channels: both start at 0%
 
     // Step 3: Start PWM output on the GPIO pin
     // This also configures the GPIO alternate function (AF2 for TIM3)
-    // MUST call after ConfigChannel — starting before configuring gives garbage waveform
+    // MUST call after ConfigChannel: starting before configuring gives garbage waveform
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
 
     /* ── TIM2: LED3 (CH2/PB3) ──────────────────────────────────────────── */
-    htim2.Instance               = TIM2;     // 32-bit GP timer — same config as TIM3
+    htim2.Instance               = TIM2;     // 32-bit GP timer: same config as TIM3
     htim2.Init.Prescaler         = 79;
     htim2.Init.CounterMode       = TIM_COUNTERMODE_UP;
     htim2.Init.Period            = 1000;
@@ -289,7 +289,7 @@ void MX_PWM_Init(void)
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 
     /* ── TIM1: LED4 (CH1/PA8) ──────────────────────────────────────────── */
-    // TIM1 is an Advanced Control Timer — requires one extra step:
+    // TIM1 is an Advanced Control Timer: requires one extra step:
     // HAL_TIMEx_PWMN_Start() or enabling the main output (MOE bit in BDTR register)
     // HAL_TIM_PWM_Start() handles this automatically for CH1 on TIM1.
     htim1.Instance               = TIM1;
@@ -298,13 +298,13 @@ void MX_PWM_Init(void)
     htim1.Init.Period            = 1000;
     htim1.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
     htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-    htim1.Init.RepetitionCounter = 0;     // Advanced timer only — not used
+    htim1.Init.RepetitionCounter = 0;     // Advanced timer only: not used
     HAL_TIM_PWM_Init(&htim1);
 
     sConfigOC.Pulse = 0;
     HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1);  // PA8 → LED4
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-    // For TIM1, HAL also sets MOE (Main Output Enable) in BDTR — required for
+    // For TIM1, HAL also sets MOE (Main Output Enable) in BDTR: required for
     // advanced timers to actually drive the pin. General purpose timers don't need this.
 }
 ```
@@ -314,8 +314,8 @@ void MX_PWM_Init(void)
 `HAL_TIM_PWM_Init()` → `HAL_TIM_PWM_ConfigChannel()` → `HAL_TIM_PWM_Start()`
 
 - `Init` configures the timer base (prescaler, period, counter mode)
-- `ConfigChannel` writes the CCR (capture/compare register) and output mode — requires the timer to already be initialized so the register addresses are valid
-- `Start` enables the timer counter and configures the GPIO alternate function — if called before `ConfigChannel`, the CCR contains garbage and the first cycle output is undefined
+- `ConfigChannel` writes the CCR (capture/compare register) and output mode: requires the timer to already be initialized so the register addresses are valid
+- `Start` enables the timer counter and configures the GPIO alternate function: if called before `ConfigChannel`, the CCR contains garbage and the first cycle output is undefined
 
 ---
 
@@ -327,19 +327,19 @@ Once initialized, changing LED brightness is a single HAL macro call per channel
 /**
  * @brief  Set PWM duty cycle for all four LEDs simultaneously.
  *
- * @param  l1  Duty cycle for LED1 (nearest,  PB4/TIM3_CH1), range 0–1000
- * @param  l2  Duty cycle for LED2           (PB5/TIM3_CH2), range 0–1000
- * @param  l3  Duty cycle for LED3           (PB3/TIM2_CH2), range 0–1000
- * @param  l4  Duty cycle for LED4 (farthest, PA8/TIM1_CH1), range 0–1000
+ * @param  l1  Duty cycle for LED1 (nearest,  PB4/TIM3_CH1), range 0:1000
+ * @param  l2  Duty cycle for LED2           (PB5/TIM3_CH2), range 0:1000
+ * @param  l3  Duty cycle for LED3           (PB3/TIM2_CH2), range 0:1000
+ * @param  l4  Duty cycle for LED4 (farthest, PA8/TIM1_CH1), range 0:1000
  *
- * @note   This function is called from LEDControllerTask — never from an ISR.
+ * @note   This function is called from LEDControllerTask: never from an ISR.
  *         __HAL_TIM_SET_COMPARE() is a direct register write, not a blocking call.
  */
 void SetLEDs(uint32_t l1, uint32_t l2, uint32_t l3, uint32_t l4)
 {
     // __HAL_TIM_SET_COMPARE(handle, channel, compare_value) expands to:
     // handle->Instance->CCR<n> = compare_value;
-    // It writes directly to the Capture/Compare Register — one 32-bit memory write.
+    // It writes directly to the Capture/Compare Register: one 32-bit memory write.
     // The timer hardware reads the new CCR value at the next period boundary
     // (because AutoReloadPreload is enabled, so updates are shadow-buffered).
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, l1);  // LED1: CCR1 of TIM3
@@ -351,7 +351,7 @@ void SetLEDs(uint32_t l1, uint32_t l2, uint32_t l3, uint32_t l4)
 
 **Why `__HAL_TIM_SET_COMPARE()` is the right tool here:**
 
-This macro expands to a *single peripheral register write* — it does not:
+This macro expands to a *single peripheral register write*: it does not:
 - Stop or restart the timer (no glitch, no missed pulse)
 - Require the timer to be paused
 - Disable interrupts
@@ -363,13 +363,13 @@ The new CCR value is latched into a **shadow register** and takes effect at the 
 
 ## 9. Distance Fading Math
 
-The cascade distance-to-brightness algorithm maps sensor readings to a smooth, sequential LED fill pattern. The design intent: as an object approaches from 30 cm away, LEDs light up one by one — LED4 (farthest from the sensor mount) first, cascading toward LED1 (nearest).
+The cascade distance-to-brightness algorithm maps sensor readings to a smooth, sequential LED fill pattern. The design intent: as an object approaches from 30 cm away, LEDs light up one by one: LED4 (farthest from the sensor mount) first, cascading toward LED1 (nearest).
 
 ### Range Definition
 
 ```
 Distance > 30 cm   →  All LEDs OFF      (object too far, ignore)
-Distance = 5–30 cm →  Cascade fade      (smooth fill from LED4 → LED1)
+Distance = 5:30 cm →  Cascade fade      (smooth fill from LED4 → LED1)
 Distance ≤ 5 cm    →  All LEDs at 100%  (maximum brightness, object very close)
 ```
 
@@ -385,13 +385,13 @@ void update_cascade_leds(float dist_cm)
     uint32_t l1, l2, l3, l4;
 
     if (dist_cm > 30.0f) {
-        // Object too far — all off
+        // Object too far: all off
         SetLEDs(0, 0, 0, 0);
         return;
     }
 
     if (dist_cm <= 5.0f) {
-        // Object very close — all at 100%
+        // Object very close: all at 100%
         SetLEDs(1000, 1000, 1000, 1000);
         return;
     }
@@ -447,7 +447,7 @@ Result: LED4=ON, LED3=ON, LED2=OFF, LED1=OFF
 17cm: ██░░  (LED4 + LED3 full, others off)  ← 17.5cm example above
 13cm: ███░  (LED4 + LED3 + LED2 full, LED1 off)
  8cm: ████▒ (all full except LED1 slightly dim)
- 5cm: ████  (all full — maximum brightness)
+ 5cm: ████  (all full: maximum brightness)
 ```
 <img width="1678" height="1079" alt="UltrasonicFinal" src="https://github.com/user-attachments/assets/d1dc0e36-4485-4dcb-a26f-73941972d04b" />
 
@@ -472,7 +472,7 @@ void LEDControllerTask(void *pvParameters)
     bool blink_state = false;
 
     for (;;) {
-        // Non-blocking queue receive — 10ms timeout so IR blink timer keeps running
+        // Non-blocking queue receive: 10ms timeout so IR blink timer keeps running
         if (xQueueReceive(xLEDQueue, &msg, pdMS_TO_TICKS(10)) == pdTRUE) {
 
             if (msg.type == LED_MSG_DISTANCE) {
@@ -481,11 +481,11 @@ void LEDControllerTask(void *pvParameters)
                                        &saved_l1, &saved_l2, &saved_l3, &saved_l4);
 
                 if (!ir_object_detected) {
-                    // IR not active — apply normally
+                    // IR not active: apply normally
                     SetLEDs(saved_l1, saved_l2, saved_l3, saved_l4);
                 }
                 // If IR IS active: distance values are saved but NOT applied.
-                // IR blink takes priority — saved values are waiting for when IR clears.
+                // IR blink takes priority: saved values are waiting for when IR clears.
 
             } else if (msg.type == LED_MSG_IR_DETECT) {
                 ir_object_detected = true;
@@ -515,7 +515,7 @@ void LEDControllerTask(void *pvParameters)
 }
 ```
 
-**The key design decision — saving distance values during IR override:**
+**The key design decision: saving distance values during IR override:**
 
 Rather than discarding distance measurements during IR mode, the task saves the computed PWM values into `saved_l1..l4`. When the IR object is removed and `LED_MSG_IR_CLEAR` arrives, the LEDs **instantly return to the correct distance-based state** without waiting for the next sensor reading (which comes every 500 ms). This makes the transition seamless.
 
@@ -523,7 +523,7 @@ Rather than discarding distance measurements during IR mode, the task saves the 
 
 ```
 Highest → IR proximity blink (5 Hz, all LEDs, overrides everything)
-Middle  → Distance cascade (smooth fade, 30cm–5cm range)
+Middle  → Distance cascade (smooth fade, 30cm:5cm range)
 Lowest  → All off (distance > 30cm or sensor stopped)
 ```
 
@@ -531,4 +531,4 @@ Lowest  → All off (distance > 30cm or sensor stopped)
 
 ---
 
-*← [04 — Secure Bootloader](04_secure_bootloader.md) | [06 — Sensors & EXTI](06_sensors_exti.md) →*
+*← [04: Secure Bootloader](04_secure_bootloader.md) | [06: Sensors & EXTI](06_sensors_exti.md) →*

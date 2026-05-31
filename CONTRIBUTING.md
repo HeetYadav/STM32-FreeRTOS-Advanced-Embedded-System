@@ -1,8 +1,8 @@
 # Contributing to STM32-FreeRTOS-Advanced-Embedded-System
 
-First off — thank you for taking the time to contribute! 🎉
+First off: thank you for taking the time to contribute! 🎉
 
-This project is a real-hardware, real-firmware embedded systems showcase built on the STM32L476RG Nucleo board. Contributions that improve its clarity, correctness, completeness, or educational value are genuinely welcome — whether you're a seasoned firmware engineer or someone just getting started with FreeRTOS and STM32.
+This project is a real-hardware, real-firmware embedded systems showcase built on the STM32L476RG Nucleo board. Contributions that improve its clarity, correctness, completeness, or educational value are genuinely welcome: whether you're a seasoned firmware engineer or someone just getting started with FreeRTOS and STM32.
 
 ---
 
@@ -44,12 +44,12 @@ Almost everything! This project benefits from many types of contributions:
 
 ### Bug Reports
 
-If you found something that doesn't work — a wrong register write, a sensor that always reads 0, a CLI command that hangs — please open an issue using the **Bug Report** template.
+If you found something that doesn't work: a wrong register write, a sensor that always reads 0, a CLI command that hangs: please open an issue using the **Bug Report** template.
 
 Before filing a bug:
 1. Check the [existing issues](../../issues) to avoid duplicates.
 2. Make sure you're on the latest `main` branch.
-3. Capture your **serial terminal output** (Tera Term at 115200 baud) — it's the fastest way to diagnose firmware-level issues.
+3. Capture your **serial terminal output** (Tera Term at 115200 baud): it's the fastest way to diagnose firmware-level issues.
 
 ---
 
@@ -57,7 +57,7 @@ Before filing a bug:
 
 **This is the single most impactful contribution you can make to this repository.**
 
-Photos of real hardware build credibility. They let other engineers visually verify their wiring, understand the scale of the project, and see that this is a real, working system — not just code on a page.
+Photos of real hardware build credibility. They let other engineers visually verify their wiring, understand the scale of the project, and see that this is a real, working system: not just code on a page.
 
 #### What photos are needed:
 
@@ -84,7 +84,7 @@ Photos of real hardware build credibility. They let other engineers visually ver
    ```markdown
    ![Full breadboard layout](images/breadboard_full_overview.jpg)
    ```
-4. Open a PR with the title: `docs: add hardware photo — [brief description]`
+4. Open a PR with the title: `docs: add hardware photo: [brief description]`
 
 No photo is too simple. Even a top-down phone photo beats a blank placeholder.
 
@@ -99,7 +99,7 @@ The documentation lives in the `docs/` folder and the root-level `README.md`. If
 - A Mermaid diagram that could be improved
 - A section that's out of date with the code
 
-…please open a PR or an issue. Documentation bugs in embedded systems are real bugs — they waste hours of debugging time for the next person.
+…please open a PR or an issue. Documentation bugs in embedded systems are real bugs: they waste hours of debugging time for the next person.
 
 ---
 
@@ -108,7 +108,7 @@ The documentation lives in the `docs/` folder and the root-level `README.md`. If
 New tasks are very welcome, as long as they:
 
 - Are self-contained within their own `.c`/`.h` file pair
-- Communicate with other tasks **only via FreeRTOS queues** — no shared global state without a mutex
+- Communicate with other tasks **only via FreeRTOS queues**: no shared global state without a mutex
 - Do not starve existing tasks (be mindful of priority levels and blocking delays)
 - Are documented with their stack size, priority, and queue communication model
 - Include a timing analysis in the PR description (worst-case blocking time)
@@ -131,7 +131,7 @@ The serial CLI is implemented in `TerminalTask` in `src/terminal_task.c`. New co
 3. Update the `help` command output to list the new command.
 4. Document the command in [`docs/cli_reference.md`](docs/cli_reference.md) (or equivalent).
 
-Commands must be non-blocking — they should not `vTaskDelay` for more than a few milliseconds inside the handler.
+Commands must be non-blocking: they should not `vTaskDelay` for more than a few milliseconds inside the handler.
 
 ---
 
@@ -148,7 +148,7 @@ Commands must be non-blocking — they should not `vTaskDelay` for more than a f
    git checkout -b docs/what-you-are-documenting
    ```
 
-3. **Make your changes.** Keep commits focused — one logical change per commit.
+3. **Make your changes.** Keep commits focused: one logical change per commit.
 
 4. **Write a descriptive commit message** following the pattern:
    ```
@@ -164,7 +164,7 @@ Commands must be non-blocking — they should not `vTaskDelay` for more than a f
    docs(wiring): add hardware photos for HC-SR04 and IR sensor connections
    ```
 
-5. **Open a Pull Request against `main`.** Fill in the PR template — describe what changed, why, and how you tested it.
+5. **Open a Pull Request against `main`.** Fill in the PR template: describe what changed, why, and how you tested it.
 
 6. If your change touches firmware: **include serial terminal output** showing the system working before and after your change. Screenshot or paste from Tera Term.
 
@@ -186,9 +186,9 @@ Follow the existing C style used throughout the project:
 
 **Other style rules:**
 - Add a comment on every non-obvious register write. A reader should not need the reference manual to understand your intent.
-- No magic numbers — use named `#define` constants for all hardware addresses, distances, and timing values.
+- No magic numbers: use named `#define` constants for all hardware addresses, distances, and timing values.
 - Keep task functions short: complex logic belongs in helper functions, not inline inside the task loop.
-- Do not use `malloc`/`free` — use FreeRTOS static allocation or stack variables only.
+- Do not use `malloc`/`free`: use FreeRTOS static allocation or stack variables only.
 
 ---
 
@@ -208,13 +208,13 @@ If your contribution adds or modifies **hardware connections**, please:
    - For timing signals: oscilloscope capture or logic analyser output if available
    - For PWM: measured frequency and duty cycle at key CCR values
 
-3. **Note any STM32 peripheral conflicts.** The STM32L476RG alternate function map is dense — always cross-check against Table 16–17 of the STM32L476 datasheet (DS11585) before claiming a pin/timer combination is free.
+3. **Note any STM32 peripheral conflicts.** The STM32L476RG alternate function map is dense: always cross-check against Table 16:17 of the STM32L476 datasheet (DS11585) before claiming a pin/timer combination is free.
 
 ---
 
 ## Questions
 
-Not sure if something is a bug or expected behaviour? Not sure how a part of the firmware works? Open an issue using the **Question** template — questions are welcome and help improve the documentation for everyone.
+Not sure if something is a bug or expected behaviour? Not sure how a part of the firmware works? Open an issue using the **Question** template: questions are welcome and help improve the documentation for everyone.
 
 ---
 

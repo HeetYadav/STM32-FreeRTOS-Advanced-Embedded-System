@@ -36,14 +36,14 @@ Sound travels through air at approximately **343 m/s** at room temperature (20Â
 
 ```
 Round-trip time = T_echo (Âµs)
-One-way distance = (343 m/s Ã— T_echo Ã— 10â»â¶) / 2
-                 = T_echo Ã— 0.0001715 m
+One-way distance = (343 m/s Ã: T_echo Ã: 10â»â¶) / 2
+                 = T_echo Ã: 0.0001715 m
                  = T_echo / 58.3 cm
 
 Simplified:   distance_cm = T_echo_Âµs / 58
 ```
 
-The constant **58** is the standard HC-SR04 divisor â€” it accounts for the two-way trip and the speed of sound.
+The constant **58** is the standard HC-SR04 divisor : it accounts for the two-way trip and the speed of sound.
 
 ### Sensor Specifications
 
@@ -53,7 +53,7 @@ The constant **58** is the standard HC-SR04 divisor â€” it accounts for the
 | Trigger pulse | 10Âµs minimum HIGH pulse on TRIG |
 | Ultrasonic frequency | 40kHz (inaudible) |
 | Burst size | 8 pulses |
-| Echo pulse width | 150Âµs â€“ 25ms (proportional to distance) |
+| Echo pulse width | 150Âµs : 25ms (proportional to distance) |
 | Minimum range | ~2 cm |
 | Maximum range | ~400 cm (4m) |
 | Blind spot at echo timeout | 38ms = no echo = out of range |
@@ -62,8 +62,8 @@ The constant **58** is the standard HC-SR04 divisor â€” it accounts for the
 
 | Signal | MCU Pin | Function |
 |---|---|---|
-| TRIG | PC7 | Output â€” MCU sends 10Âµs pulse here |
-| ECHO | PB6 | Input â€” MCU measures this pulse width |
+| TRIG | PC7 | Output : MCU sends 10Âµs pulse here |
+| ECHO | PB6 | Input : MCU measures this pulse width |
 
 > ðŸ“¸ **[Hardware Photo: HC-SR04 wired to Nucleo-L476RG breadboard, showing TRIG/ECHO connections]** *(Contribute one via PR!)*
 
@@ -86,15 +86,15 @@ The constant **58** is the standard HC-SR04 divisor â€” it accounts for the
 
 The HC-SR04 echo pulse at 2cm (minimum range) is:
 ```
-T_echo = 2cm Ã— 58 = 116Âµs
+T_echo = 2cm Ã: 58 = 116Âµs
 ```
 
 At 5cm (our nearest threshold):
 ```
-T_echo = 5cm Ã— 58 = 290Âµs
+T_echo = 5cm Ã: 58 = 290Âµs
 ```
 
-We need to measure these pulse widths to within a few microseconds. The SysTick timer runs at 1ms resolution â€” far too coarse. We need a dedicated hardware timer running at **1MHz** (1Âµs per tick).
+We need to measure these pulse widths to within a few microseconds. The SysTick timer runs at 1ms resolution : far too coarse. We need a dedicated hardware timer running at **1MHz** (1Âµs per tick).
 
 ### Why TIM5 Specifically?
 
@@ -103,14 +103,14 @@ The STM32L476RG has five general-purpose timers. The choice matters:
 | Timer | Bit Width | Available for Stopwatch? | Reason |
 |---|---|---|---|
 | TIM1 | 16-bit | âŒ | Used for LED4 PWM (PA8, TIM1_CH1) |
-| TIM2 | 32-bit | âŒ | Used for LED3 PWM (PB3, TIM2_CH2) â€” see TIM2 conflict story |
+| TIM2 | 32-bit | âŒ | Used for LED3 PWM (PB3, TIM2_CH2) : see TIM2 conflict story |
 | TIM3 | 16-bit | âŒ | Used for LED1/LED2 PWM (PB4/PB5, TIM3_CH1/CH2) |
 | TIM4 | 16-bit | âš ï¸ | Available but 16-bit only |
 | TIM5 | **32-bit** | âœ… | No pin conflicts, 32-bit counter |
 
 **TIM5 wins for two reasons:**
 
-1. **32-bit counter**: At 1MHz, a 16-bit timer overflows after 65.535ms. The HC-SR04 timeout is 38ms â€” dangerously close. A 32-bit timer at 1MHz overflows after 4294 seconds. No overflow risk whatsoever.
+1. **32-bit counter**: At 1MHz, a 16-bit timer overflows after 65.535ms. The HC-SR04 timeout is 38ms : dangerously close. A 32-bit timer at 1MHz overflows after 4294 seconds. No overflow risk whatsoever.
 
 2. **No pin conflicts**: TIM5 has no channel pins that overlap with our PWM LED assignments.
 
@@ -132,7 +132,7 @@ TIM5->ARR = 0xFFFFFFFF;             // auto-reload: max value (32-bit, never ove
 TIM5->CR1 &= ~TIM_CR1_CEN;         // start with timer disabled (we enable on echo rising edge)
 TIM5->EGR  = TIM_EGR_UG;           // â† CRITICAL: force-load shadow registers NOW
                                     //   Without this line, PSC is buffered and ignored
-                                    //   until the next update event â€” which never comes
+                                    //   until the next update event : which never comes
                                     //   if we enable the timer before the first overflow
 TIM5->SR   = 0;                     // clear any pending flags set by EGR write above
 ```
@@ -147,7 +147,7 @@ TIM5->CNT = 0;              // reset counter to 0
 TIM5->CR1 |= TIM_CR1_CEN;  // start counting (at 1Âµs per tick)
 
 // On echo falling edge (ISR):
-TIM5->CR1 &= ~TIM_CR1_CEN; // stop counting â€” freeze the value
+TIM5->CR1 &= ~TIM_CR1_CEN; // stop counting : freeze the value
 uint32_t elapsed_us = TIM5->CNT; // read elapsed microseconds
 ```
 
@@ -159,11 +159,11 @@ uint32_t elapsed_us = TIM5->CNT; // read elapsed microseconds
 
 ### Symptom
 
-After wiring the HC-SR04 and writing the initial ISR code, distance readings were consistently reported as **4 cm** regardless of the actual distance to any obstacle. Moving a hand from 50cm to touching the sensor made no difference â€” always 4cm. The LED bar graph showed LED1 (nearest) always lit, never anything else.
+After wiring the HC-SR04 and writing the initial ISR code, distance readings were consistently reported as **4 cm** regardless of the actual distance to any obstacle. Moving a hand from 50cm to touching the sensor made no difference : always 4cm. The LED bar graph showed LED1 (nearest) always lit, never anything else.
 
 ### Investigation
 
-The first suspicion was wiring. TRIG (PC7) and ECHO (PB6) were verified against the schematic. An oscilloscope confirmed the ECHO pin was responding correctly â€” the pulse width visibly changed as a hand moved closer and farther. The hardware was fine.
+The first suspicion was wiring. TRIG (PC7) and ECHO (PB6) were verified against the schematic. An oscilloscope confirmed the ECHO pin was responding correctly : the pulse width visibly changed as a hand moved closer and farther. The hardware was fine.
 
 Next, the TIM5 counter was inspected. The CNT register was read immediately after the echo falling edge inside the ISR and transmitted over UART. The reported value was always approximately **232**, regardless of actual distance.
 
@@ -171,7 +171,7 @@ Next, the TIM5 counter was inspected. The CNT register was read immediately afte
 232 Âµs / 58 = 4.0 cm   â† matches the symptom exactly
 ```
 
-So TIM5 was consistently reading 232Âµs, period. The counter was clearly not counting correctly â€” or not at all.
+So TIM5 was consistently reading 232Âµs, period. The counter was clearly not counting correctly : or not at all.
 
 A logic analyzer showed the ECHO pulse was actually around **1,740Âµs** (about 30cm). TIM5 was counting far too few ticks.
 
@@ -182,12 +182,12 @@ The STM32 timer **prescaler register (PSC)** is a **shadow register**. This is d
 > *"The prescaler is loaded at each update event."*
 
 On ARM STM32 timers, the PSC register has two halves:
-- The **preload register** â€” the value you write to `TIM5->PSC`
-- The **shadow (active) register** â€” the value actually used by the counter hardware
+- The **preload register** : the value you write to `TIM5->PSC`
+- The **shadow (active) register** : the value actually used by the counter hardware
 
-Writing `TIM5->PSC = 79` updates only the **preload** register. The shadow register retains its previous value (0 after reset â€” meaning the prescaler is 1, not 80, so the timer runs at **80MHz** not 1MHz).
+Writing `TIM5->PSC = 79` updates only the **preload** register. The shadow register retains its previous value (0 after reset : meaning the prescaler is 1, not 80, so the timer runs at **80MHz** not 1MHz).
 
-The shadow register is updated automatically at the next **Update Event (UEV)** â€” which normally occurs when the counter overflows from ARR back to 0. But:
+The shadow register is updated automatically at the next **Update Event (UEV)** : which normally occurs when the counter overflows from ARR back to 0. But:
 
 1. We disabled the counter (`CR1 &= ~TIM_CR1_CEN`) before first use
 2. We enabled it for each echo measurement and stopped it immediately after
@@ -202,7 +202,7 @@ Actual echo duration: 1,740Âµs = 1,740,000ns
 At 80MHz (12.5ns/tick): 1,740,000ns / 12.5ns = 139,200 ticks
 But the 16-bit portion overflows at 65,535...
 
-Wait â€” TIM5 is 32-bit. 139,200 fits fine.
+Wait : TIM5 is 32-bit. 139,200 fits fine.
 But our ISR was stopping TIM5 early...
 
 Re-checking: echo pulse was 2,900ns (2.9Âµs) at 4cm range reading.
@@ -228,7 +228,7 @@ After this fix, readings immediately reflected actual distance. Moving a hand fr
 
 > **Always write `TIMx->EGR = TIM_EGR_UG` after modifying PSC or ARR on any STM32 timer before first use.**
 
-This applies to every timer peripheral on the STM32 family. The shadow register mechanism exists to allow PSC and ARR changes to take effect synchronously at the next update event (preventing glitches mid-period) â€” but it means your initialization writes are **not immediately active** unless you force the update event manually.
+This applies to every timer peripheral on the STM32 family. The shadow register mechanism exists to allow PSC and ARR changes to take effect synchronously at the next update event (preventing glitches mid-period) : but it means your initialization writes are **not immediately active** unless you force the update event manually.
 
 ```c
 // The safe timer initialization pattern:
@@ -246,7 +246,7 @@ TIMx->CR1 |= TIM_CR1_CEN;       // 6. Start timer (now running with correct pres
 
 ### How GPIO Pins Map to EXTI Lines
 
-The STM32L476 has 16 external interrupt lines (EXTI0â€“EXTI15). Each EXTI line corresponds to a **pin number** (not a full GPIO address). All GPIOx_Pn pins (PA0, PB0, PC0, etc.) share EXTI line 0. All GPIOx_P6 pins share EXTI line 6.
+The STM32L476 has 16 external interrupt lines (EXTI0:EXTI15). Each EXTI line corresponds to a **pin number** (not a full GPIO address). All GPIOx_Pn pins (PA0, PB0, PC0, etc.) share EXTI line 0. All GPIOx_P6 pins share EXTI line 6.
 
 ```
 EXTI Line 0  â† PA0, PB0, PC0, PD0 ... (one active at a time, selected by SYSCFG)
@@ -262,7 +262,7 @@ The `SYSCFG_EXTICRx` registers select which GPIO port (PA, PB, PC...) drives eac
 
 ### EXTI9_5: One Handler for Five Lines
 
-The ARM NVIC has limited interrupt vectors. The STM32L476 combines EXTI lines 5â€“9 into a single IRQ: **EXTI9_5_IRQn**. This means one interrupt handler (`EXTI9_5_IRQHandler`) must check the pending register to determine which line(s) fired.
+The ARM NVIC has limited interrupt vectors. The STM32L476 combines EXTI lines 5:9 into a single IRQ: **EXTI9_5_IRQn**. This means one interrupt handler (`EXTI9_5_IRQHandler`) must check the pending register to determine which line(s) fired.
 
 In our project, this handler serves:
 - **PB6** â†’ EXTI line 6 â†’ HC-SR04 echo rising/falling edge
@@ -318,13 +318,13 @@ void EXTI9_5_IRQHandler(void) {
             // â”€â”€ RISING EDGE: Echo signal just went HIGH â”€â”€
             // The sensor has fired its 8-pulse burst and is now listening.
             // Start our 1Âµs stopwatch from zero.
-            TIM5->CNT = 0;              // reset counter to 0 â€” starts measuring now
+            TIM5->CNT = 0;              // reset counter to 0 : starts measuring now
             TIM5->CR1 |= TIM_CR1_CEN;  // enable TIM5 (begins counting at 1MHz)
-            // No queue post on rising edge â€” we only have start time, not duration yet
+            // No queue post on rising edge : we only have start time, not duration yet
         } else {
             // â”€â”€ FALLING EDGE: Echo signal just went LOW â”€â”€
             // The reflected pulse has been received. Stop the stopwatch.
-            TIM5->CR1 &= ~TIM_CR1_CEN; // stop TIM5 â€” freeze the count immediately
+            TIM5->CR1 &= ~TIM_CR1_CEN; // stop TIM5 : freeze the count immediately
 
             // Build a sensor message with the elapsed time
             SensorMessage_t msg;
@@ -338,7 +338,7 @@ void EXTI9_5_IRQHandler(void) {
         }
 
         // MANDATORY: clear the EXTI pending bit
-        // If not cleared, the ISR will re-fire immediately upon return â€” infinite loop
+        // If not cleared, the ISR will re-fire immediately upon return : infinite loop
         __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_6);
     }
 
@@ -403,9 +403,9 @@ When an object enters the sensing zone and reflects IR back to the photodetector
 
 | Property | Value |
 |---|---|
-| Supply voltage | 3.3V â€“ 5V |
+| Supply voltage | 3.3V : 5V |
 | Output type | Open-collector, active LOW |
-| Detection range | 2cm â€“ 30cm (adjustable via potentiometer) |
+| Detection range | 2cm : 30cm (adjustable via potentiometer) |
 | Output idle state | HIGH (no obstacle) |
 | Output active state | LOW (obstacle detected) |
 | Response time | <1ms |
@@ -420,7 +420,7 @@ The internal pull-up on PA7 ensures a clean HIGH signal when no obstacle is pres
 
 ### Adjusting Sensitivity
 
-The blue potentiometer on the HW-201 module adjusts the comparator threshold â€” essentially setting the detection range. Clockwise = more sensitive (longer range). For our use case, set it to detect objects at 5â€“10cm (the same range where all LEDs should be fully lit by the ultrasonic sensor).
+The blue potentiometer on the HW-201 module adjusts the comparator threshold : essentially setting the detection range. Clockwise = more sensitive (longer range). For our use case, set it to detect objects at 5:10cm (the same range where all LEDs should be fully lit by the ultrasonic sensor).
 
 > ðŸ“¸ **[Hardware Photo: HW-201 IR sensor mounted on breadboard next to HC-SR04, potentiometer visible]** *(Contribute one via PR!)*
 
@@ -441,7 +441,7 @@ The IR sensor has **higher behavioral priority** than the ultrasonic sensor. Whe
 The IR sensor shares `EXTI9_5_IRQHandler` with the HC-SR04. Here is the IR-specific path:
 
 ```c
-// Inside EXTI9_5_IRQHandler â€” PA7 section:
+// Inside EXTI9_5_IRQHandler : PA7 section:
 
 if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_7)) {
 
@@ -465,7 +465,7 @@ if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_7)) {
     }
 
     xQueueSendFromISR(xSensorQueue, &msg, &xHigherPriorityTaskWoken);
-    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_7); // clear pending bit â€” mandatory
+    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_7); // clear pending bit : mandatory
 }
 ```
 
@@ -499,16 +499,16 @@ MCU Output  PC7 (TRIG)
 
 HC-SR04     Internal burst (not visible on MCU pins)
             Fires 8x 40kHz pulses immediately after TRIG falling edge
-            â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘  (burst â‰ˆ 200Âµs)
+            â:‘â:‘â:‘â:‘â:‘â:‘â:‘â:‘â:‘  (burst â‰ˆ 200Âµs)
 
 MCU Input   PB6 (ECHO)
             â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                              â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                                   â”‚                              â”‚
-                                  â”‚â—„â”€â”€â”€â”€â”€â”€ echo duration â”€â”€â”€â”€â”€â”€â”€â–ºâ”‚
+                                  â”‚â:„â”€â”€â”€â”€â”€â”€ echo duration â”€â”€â”€â”€â”€â”€â”€â:ºâ”‚
                                   â”‚      (T_echo Âµs)             â”‚
             ______________________â”‚                              â”‚__________
 
-EXTI fires: â–²                    â–² (rising)           â–² (falling)
+EXTI fires: â:²                    â:² (rising)           â:² (falling)
             â”‚                    â”‚                    â”‚
             â”‚                    â””â”€â”€TIM5->CNT=0       â””â”€â”€TIM5 stopped
             â”‚                       TIM5 starts          msg.value=TIM5->CNT
@@ -517,7 +517,7 @@ EXTI fires: â–²                    â–² (rising)           â–² (falli
 TIM5->CNT:  0â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ 0 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• T_echo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                                   (counting at 1MHz = 1Âµs/tick)
 
-SensorTask: Blocked on xSensorQueue â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–ºâ”‚ Wakes here
+SensorTask: Blocked on xSensorQueue â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â:ºâ”‚ Wakes here
                                                                  â”‚ distance = T_echo/58
                                                                  â”‚ post to xLEDQueue
 
@@ -536,16 +536,16 @@ Total MCU response time from echo to LED update: ~10Âµs (one ISR + two queue o
 ### IR Sensor Timing
 
 ```
-PA7 (IR OUT)  [Active LOW â€” pull-up holds HIGH when idle]
+PA7 (IR OUT)  [Active LOW : pull-up holds HIGH when idle]
 
 Idle:       â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                                                                             
 Object in:  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                               â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                            â”‚                               â”‚
-                           â”‚â—„â”€â”€â”€â”€â”€â”€ obstacle present â”€â”€â”€â”€â”€â–ºâ”‚
+                           â”‚â:„â”€â”€â”€â”€â”€â”€ obstacle present â”€â”€â”€â”€â”€â:ºâ”‚
                            â”‚                               â”‚
                            â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                           â–² FALLING EDGE                  â–² RISING EDGE
+                           â:² FALLING EDGE                  â:² RISING EDGE
                            â”‚ EXTI fires                    â”‚ EXTI fires
                            â”‚ msg={IR, value=1}             â”‚ msg={IR, value=0}
                            â”‚ â†’ LED_CMD_IR_ON               â”‚ â†’ LED_CMD_IR_OFF
@@ -558,9 +558,9 @@ Object in:  â”€â”€â”€â”€â”€â”€â”€â”€â�
 
 | Component | Pin | Timer Used | ISR Handler | FreeRTOS Queue |
 |---|---|---|---|---|
-| HC-SR04 TRIG | PC7 | â€” (GPIO output) | â€” | â€” |
+| HC-SR04 TRIG | PC7 | : (GPIO output) | : | : |
 | HC-SR04 ECHO | PB6 | TIM5 (1Âµs stopwatch) | EXTI9_5_IRQHandler | â†’ xSensorQueue |
-| HW-201 IR OUT | PA7 | â€” | EXTI9_5_IRQHandler | â†’ xSensorQueue |
+| HW-201 IR OUT | PA7 | : | EXTI9_5_IRQHandler | â†’ xSensorQueue |
 
 The design cleanly separates concerns: ISRs capture raw hardware events with minimum overhead (a timer read + a queue post), while SensorTask performs all calculations and dispatches LED commands. No floating-point math, no string formatting, no blocking operations occur inside any ISR.
 

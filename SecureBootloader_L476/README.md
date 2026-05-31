@@ -1,6 +1,6 @@
 # SecureBootloader_L476
 
-> **A custom, minimal Secure Bootloader for the STM32L476RG** — verifies application firmware integrity via CRC32 and supports UART Over-The-Air (OTA) updates using the XMODEM-CRC protocol.
+> **A custom, minimal Secure Bootloader for the STM32L476RG**: verifies application firmware integrity via CRC32 and supports UART Over-The-Air (OTA) updates using the XMODEM-CRC protocol.
 
 ---
 
@@ -8,9 +8,9 @@
 
 On every power-on or reset, this bootloader runs **before** your main application. It performs three jobs:
 
-1. **Integrity Check** — Reads the application's `AppHeader` struct from Flash, verifies a CRC32 checksum using the STM32's hardware CRC peripheral, and only launches the app if the checksum matches.
-2. **Secure Launch** — If CRC passes, cleanly tears down all peripherals, relocates the interrupt vector table (`VTOR`), and jumps to the application's `Reset_Handler`.
-3. **OTA Update** — If the breadboard button (`PB10`) is held during reset, or if CRC verification fails, the bootloader enters XMODEM-CRC receive mode and programs incoming firmware directly into application flash.
+1. **Integrity Check**: Reads the application's `AppHeader` struct from Flash, verifies a CRC32 checksum using the STM32's hardware CRC peripheral, and only launches the app if the checksum matches.
+2. **Secure Launch**: If CRC passes, cleanly tears down all peripherals, relocates the interrupt vector table (`VTOR`), and jumps to the application's `Reset_Handler`.
+3. **OTA Update**: If the breadboard button (`PB10`) is held during reset, or if CRC verification fails, the bootloader enters XMODEM-CRC receive mode and programs incoming firmware directly into application flash.
 
 For the full deep-dive, see [`docs/04_secure_bootloader.md`](../docs/04_secure_bootloader.md).
 
@@ -22,12 +22,12 @@ For the full deep-dive, see [`docs/04_secure_bootloader.md`](../docs/04_secure_b
 STM32L476RG Flash (1MB)
 ┌──────────────────────────────────┐ 0x0800_0000
 │                                  │
-│   SecureBootloader_L476          │ Pages 0–15 (32KB)
+│   SecureBootloader_L476          │ Pages 0:15 (32KB)
 │   (this project)                 │
 │                                  │
 ├──────────────────────────────────┤ 0x0800_8000
 │   FreeRTOS_App_L476              │
-│   (vector table, AppHeader,      │ Pages 16–511 (~992KB)
+│   (vector table, AppHeader,      │ Pages 16:511 (~992KB)
 │    application code)             │
 │                                  │
 └──────────────────────────────────┘ 0x080F_FFFF
@@ -61,7 +61,7 @@ STM32L476RG Flash (1MB)
 pio run
 ```
 
-### Flash (via ST-Link — one time only)
+### Flash (via ST-Link: one time only)
 
 ```bash
 pio run -t upload
@@ -85,14 +85,7 @@ Followed immediately by the FreeRTOS application startup message.
 
 ### OTA Update Mode (PB10 held, or CRC failed)
 
-```
---- Advanced UART Bootloader Started ---
-Button pressed! Forced OTA Update Mode.
-
-[OTA] Erasing Flash Memory... Please wait.
-[OTA] Ready! Please send firmware.bin via XMODEM now.
-CCCCCCCCCCCCCCCCC
-```
+<img width="1919" height="1079" alt="Screenshot 2026-05-31 194216" src="https://github.com/user-attachments/assets/05f6f78a-6c7a-4950-a788-aaffb597e5d6" />
 
 The `C` characters are the XMODEM-CRC initiation signal. Open Tera Term → File → Transfer → XMODEM → Send → select `FreeRTOS_App_L476/.pio/build/nucleo_l476rg/firmware.bin`.
 
@@ -107,7 +100,7 @@ CRC MATCH! Jumping to Application...
 ```
 
 ---
-<img width="1919" height="1079" alt="Screenshot 2026-05-31 194216" src="https://github.com/user-attachments/assets/05f6f78a-6c7a-4950-a788-aaffb597e5d6" />
+
 
 ## Key Source Files
 

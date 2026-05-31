@@ -8,7 +8,7 @@
 
 1. [Components List](#1-components-list)
 2. [Complete Wiring Table](#2-complete-wiring-table)
-3. [HC-SR04 Ultrasonic Sensor — Special Notes](#3-hc-sr04-ultrasonic-sensor--special-notes)
+3. [HC-SR04 Ultrasonic Sensor: Special Notes](#3-hc-sr04-ultrasonic-sensor--special-notes)
 4. [HW-201 IR Proximity Sensor](#4-hw-201-ir-proximity-sensor)
 5. [LED Wiring Detail](#5-led-wiring-detail)
 6. [Button Wiring](#6-button-wiring)
@@ -23,11 +23,11 @@
 | Component | Model / Spec | Qty | Purpose in Project |
 |---|---|---|---|
 | **MCU Development Board** | ST Nucleo-L476RG (STM32L476RGT6, ARM Cortex-M4 @ 80 MHz, 96 KB RAM, 1 MB Flash) | 1 | Main processing unit; runs bootloader + FreeRTOS application |
-| **Ultrasonic Distance Sensor** | HC-SR04 (2 cm – 400 cm range, 40 kHz, **5V supply, 5V ECHO output**) | 1 | Measures object distance; drives cascade LED brightness |
-| **IR Proximity Sensor** | HW-201 (adjustable sensitivity potentiometer, digital OUT, active LOW, **3.3V–5V supply**) | 1 | Detects close-range object presence; overrides LED to blink mode |
+| **Ultrasonic Distance Sensor** | HC-SR04 (2 cm: 400 cm range, 40 kHz, **5V supply, 5V ECHO output**) | 1 | Measures object distance; drives cascade LED brightness |
+| **IR Proximity Sensor** | HW-201 (adjustable sensitivity potentiometer, digital OUT, active LOW, **3.3V:5V supply**) | 1 | Detects close-range object presence; overrides LED to blink mode |
 | **LEDs** | Standard 5mm through-hole LED (red or any color), Vf ≈ 2.0V | 4 | Visual distance feedback; PWM-controlled brightness |
 | **Current-Limiting Resistors** | 220 Ω, 1/4W through-hole | 4 | One per LED; limits GPIO source current to safe level |
-| **External Push Button** | Momentary SPST tactile switch | 1 | PB10: dual-function — triggers LED flash effect AND enters bootloader OTA mode when held at reset |
+| **External Push Button** | Momentary SPST tactile switch | 1 | PB10: dual-function: triggers LED flash effect AND enters bootloader OTA mode when held at reset |
 | **Pull-up Resistor** | 10 kΩ, 1/4W through-hole | 1 | External pull-up for PB10 button to 3.3V (ensures HIGH default state) |
 | **Breadboard** | Half-size or full-size solderless breadboard | 1 | Mounts sensors, LEDs, button, resistors |
 | **Jumper Wires** | Male-to-male and male-to-female Dupont wires | ~30 | Interconnects between Nucleo headers and breadboard |
@@ -38,26 +38,26 @@
 ## 2. Complete Wiring Table
 
 > [!IMPORTANT]
-> The Nucleo-L476RG operates at **3.3V logic**. All GPIO pins are 3.3V. The HC-SR04 is a **5V device** — its ECHO pin outputs 5V logic. See [Section 3](#3-hc-sr04-ultrasonic-sensor--special-notes) and [Section 9](#9-cautions-and-notes) for the voltage divider recommendation before connecting ECHO directly.
+> The Nucleo-L476RG operates at **3.3V logic**. All GPIO pins are 3.3V. The HC-SR04 is a **5V device**: its ECHO pin outputs 5V logic. See [Section 3](#3-hc-sr04-ultrasonic-sensor--special-notes) and [Section 9](#9-cautions-and-notes) for the voltage divider recommendation before connecting ECHO directly.
 
 ### HC-SR04 Ultrasonic Sensor
 
 | Signal | HC-SR04 Pin | MCU Pin | GPIO Port | Direction | Notes |
 |---|---|---|---|---|---|
 | Trigger pulse | TRIG | **PC7** | GPIOC | MCU → Sensor | 10 µs HIGH pulse sent by `SensorTask` every 500 ms |
-| Echo return | ECHO | **PB6** | GPIOB | Sensor → MCU | **⚠️ 5V output** — use voltage divider (see Section 3). Captured by EXTI on both edges; timed with TIM5 @ 1 MHz |
-| Power | VCC | **5V (CN7 pin 18)** | — | Board → Sensor | Must be 5V; sensor won't trigger reliably at 3.3V |
-| Ground | GND | **GND (any)** | — | — | Common ground with Nucleo GND |
+| Echo return | ECHO | **PB6** | GPIOB | Sensor → MCU | **⚠️ 5V output**: use voltage divider (see Section 3). Captured by EXTI on both edges; timed with TIM5 @ 1 MHz |
+| Power | VCC | **5V (CN7 pin 18)** |: | Board → Sensor | Must be 5V; sensor won't trigger reliably at 3.3V |
+| Ground | GND | **GND (any)** |: |: | Common ground with Nucleo GND |
 
 ### HW-201 IR Proximity Sensor
 
 | Signal | HW-201 Pin | MCU Pin | GPIO Port | Direction | Notes |
 |---|---|---|---|---|---|
-| IR output | OUT (D0) | **PA7** | GPIOA | Sensor → MCU | Active LOW — goes LOW when object detected. Triggers EXTI both edges |
-| Power | VCC | **3.3V** | — | Board → Sensor | HW-201 works on 3.3V; uses 3.3V to avoid 5V logic on OUT pin |
-| Ground | GND | **GND (any)** | — | — | Common ground |
+| IR output | OUT (D0) | **PA7** | GPIOA | Sensor → MCU | Active LOW: goes LOW when object detected. Triggers EXTI both edges |
+| Power | VCC | **3.3V** |: | Board → Sensor | HW-201 works on 3.3V; uses 3.3V to avoid 5V logic on OUT pin |
+| Ground | GND | **GND (any)** |: |: | Common ground |
 
-> **Sensitivity adjustment**: The HW-201 has a blue potentiometer on board. Turn it clockwise to decrease detection range, counter-clockwise to increase it. Set it to detect objects at ~5–10 cm for best interaction with the ultrasonic cascade.
+> **Sensitivity adjustment**: The HW-201 has a blue potentiometer on board. Turn it clockwise to decrease detection range, counter-clockwise to increase it. Set it to detect objects at ~5:10 cm for best interaction with the ultrasonic cascade.
 
 ### LEDs (PWM Controlled)
 
@@ -65,7 +65,7 @@
 |---|---|---|---|---|---|
 | **LED1** (nearest, brightest at 5cm) | **PB4** | TIM3_CH1 | GPIOB | ~1 kHz | First LED to illuminate as object approaches |
 | **LED2** | **PB5** | TIM3_CH2 | GPIOB | ~1 kHz | |
-| **LED3** | **PB3** | TIM2_CH2 | GPIOB | ~1 kHz | Originally TIM2 — see [TIM2 conflict](../docs/05_bugs_and_lessons.md) |
+| **LED3** | **PB3** | TIM2_CH2 | GPIOB | ~1 kHz | Originally TIM2: see [TIM2 conflict](../docs/05_bugs_and_lessons.md) |
 | **LED4** (farthest, first to turn on) | **PA8** | TIM1_CH1 | GPIOA | ~1 kHz | First LED to light up as object enters 30 cm range |
 
 Each LED cathode connects to GND via a **220 Ω resistor**. The MCU pin drives the anode (PWM HIGH = LED on).
@@ -83,21 +83,21 @@ Each LED cathode connects to GND via a **220 Ω resistor**. The MCU pin drives t
 |---|---|---|---|---|
 | **TX** | **PA9** | GPIOA | MCU → PC | UART1 transmit; connect to RX of USB-Serial adapter or use ST-Link VCP |
 | **RX** | **PA10** | GPIOA | PC → MCU | UART1 receive; interrupt-driven (RXNE flag), bytes posted to `xRXQueue` |
-| **Baud rate** | — | — | — | 115200 baud, 8 data bits, no parity, 1 stop bit (8N1) |
+| **Baud rate** |: |: |: | 115200 baud, 8 data bits, no parity, 1 stop bit (8N1) |
 
-> **Using ST-Link VCP**: The Nucleo board's ST-Link includes a Virtual COM Port that connects to PA2/PA3 by default via solder bridges. If UART1 (PA9/PA10) is preferred (as in this project), connect a USB-Serial adapter externally, or reconfigure the ST-Link solder bridges (SB13/SB14 on the Nucleo board) — see the Nucleo-L476RG User Manual UM1724.
+> **Using ST-Link VCP**: The Nucleo board's ST-Link includes a Virtual COM Port that connects to PA2/PA3 by default via solder bridges. If UART1 (PA9/PA10) is preferred (as in this project), connect a USB-Serial adapter externally, or reconfigure the ST-Link solder bridges (SB13/SB14 on the Nucleo board): see the Nucleo-L476RG User Manual UM1724.
 
 ### Onboard Resources Used
 
 | Resource | MCU Pin | Notes |
 |---|---|---|
-| **Onboard LED (LD2)** | **PA5** | Toggled by `HeartbeatTask` every 1s — alive indicator |
+| **Onboard LED (LD2)** | **PA5** | Toggled by `HeartbeatTask` every 1s: alive indicator |
 | **ST-Link SWDIO** | **PA13** | SWD debug/flash interface (shared with ST-Link chip on board) |
 | **ST-Link SWDCLK** | **PA14** | SWD clock |
 
 ---
 
-## 3. HC-SR04 Ultrasonic Sensor — Special Notes
+## 3. HC-SR04 Ultrasonic Sensor: Special Notes
 
 ### How It Works
 
@@ -105,7 +105,7 @@ The HC-SR04 measures distance by emitting an ultrasonic burst and measuring how 
 
 1. MCU asserts TRIG pin HIGH for at least **10 µs**
 2. Sensor emits eight 40 kHz pulses
-3. Sensor pulls ECHO pin HIGH — MCU captures timestamp using **TIM5** (1 MHz free-running, so 1 count = 1 µs)
+3. Sensor pulls ECHO pin HIGH: MCU captures timestamp using **TIM5** (1 MHz free-running, so 1 count = 1 µs)
 4. Sound travels to object and back; sensor pulls ECHO LOW
 5. MCU captures end timestamp
 6. Pulse width in µs → distance: `distance_cm = pulse_us / 58`
@@ -121,7 +121,7 @@ Distance formula:
 
 ### ⚠️ The 5V ECHO Voltage Problem
 
-The HC-SR04 **ECHO pin outputs 5V** because the sensor is powered from 5V and its output stage swings rail-to-rail. The STM32L476's GPIO input threshold for 3.3V operation is typically Vil_max = 1.17V and Vih_min = 2.13V — but the **absolute maximum voltage on any GPIO pin is VDD + 0.3V = 3.6V**.
+The HC-SR04 **ECHO pin outputs 5V** because the sensor is powered from 5V and its output stage swings rail-to-rail. The STM32L476's GPIO input threshold for 3.3V operation is typically Vil_max = 1.17V and Vih_min = 2.13V: but the **absolute maximum voltage on any GPIO pin is VDD + 0.3V = 3.6V**.
 
 Connecting a 5V signal directly to a 3.3V GPIO pin **can permanently damage the STM32**.
 
@@ -143,10 +143,10 @@ HC-SR04 ECHO (5V)
 Vout = 5V × (20kΩ / (10kΩ + 20kΩ)) = 5V × 0.667 = 3.33V ≈ 3.3V ✓
 ```
 
-Alternatively, a **1kΩ + 2kΩ** divider works equally well for smaller resistor values (lower source impedance, faster edge response). The divider must be sized to switch cleanly during the echo pulse — avoid values above 100kΩ total (slow edge due to parasitic capacitance).
+Alternatively, a **1kΩ + 2kΩ** divider works equally well for smaller resistor values (lower source impedance, faster edge response). The divider must be sized to switch cleanly during the echo pulse: avoid values above 100kΩ total (slow edge due to parasitic capacitance).
 
 > [!CAUTION]
-> **Do not skip the voltage divider.** Running ECHO directly into PB6 at 5V may appear to work initially due to the STM32's internal protection diodes clamping the voltage — but these diodes have limited current handling (~10mA) and will degrade or fail over time. Use a proper voltage divider or a dedicated level-shifter IC (e.g., TXB0104, BSS138 FET).
+> **Do not skip the voltage divider.** Running ECHO directly into PB6 at 5V may appear to work initially due to the STM32's internal protection diodes clamping the voltage: but these diodes have limited current handling (~10mA) and will degrade or fail over time. Use a proper voltage divider or a dedicated level-shifter IC (e.g., TXB0104, BSS138 FET).
 
 ---
 
@@ -165,7 +165,7 @@ The signal is **active LOW** and the STM32's EXTI is configured to trigger on **
 
 ### Powering at 3.3V
 
-Powering the HW-201 from 3.3V (not 5V) keeps the OUT pin output swing at 3.3V, eliminating any level-shifting concerns. The sensor's LM393 comparator functions correctly at 3.3V supply; sensitivity range is slightly reduced compared to 5V operation but remains adequate for 5–15 cm detection.
+Powering the HW-201 from 3.3V (not 5V) keeps the OUT pin output swing at 3.3V, eliminating any level-shifting concerns. The sensor's LM393 comparator functions correctly at 3.3V supply; sensitivity range is slightly reduced compared to 5V operation but remains adequate for 5:15 cm detection.
 
 ---
 
@@ -178,7 +178,7 @@ Each LED is wired as follows:
 ```
 MCU GPIO Pin (PWM output)
         │
-        │  (no series resistor on MCU side — resistor is on cathode side)
+        │  (no series resistor on MCU side: resistor is on cathode side)
         │
       LED Anode (+)
       LED Cathode (-)
@@ -220,17 +220,17 @@ The ultrasonic sensor drives a smooth cascade across all four LEDs:
 | Distance | LED4 (PA8) | LED3 (PB3) | LED2 (PB5) | LED1 (PB4) | Duty |
 |---|---|---|---|---|---|
 | > 30 cm | OFF | OFF | OFF | OFF | 0% |
-| 25 – 30 cm | ON | OFF | OFF | OFF | Proportional |
-| 20 – 25 cm | ON | ON | OFF | OFF | Proportional |
-| 10 – 20 cm | ON | ON | ON | OFF | Proportional |
-| 5 – 10 cm | ON | ON | ON | ON | Proportional |
+| 25: 30 cm | ON | OFF | OFF | OFF | Proportional |
+| 20: 25 cm | ON | ON | OFF | OFF | Proportional |
+| 10: 20 cm | ON | ON | ON | OFF | Proportional |
+| 5: 10 cm | ON | ON | ON | ON | Proportional |
 | ≤ 5 cm | FULL | FULL | FULL | FULL | 100% |
 
 The duty cycle within each active LED is linearly interpolated across the distance range, creating a smooth dimming effect as the object approaches.
 
 ### IR Override (Higher Priority)
 
-When the HW-201 detects an object (OUT goes LOW), `IR_OBJECT_DETECTED` is posted to `xLEDQueue` from ISR context. The `LEDControllerTask` immediately overrides the distance-based state — **all four LEDs blink at 100% duty** (e.g., 500ms on / 500ms off cycle) regardless of what the ultrasonic sensor reports. When the object is removed, `IR_OBJECT_REMOVED` restores ultrasonic-driven mode.
+When the HW-201 detects an object (OUT goes LOW), `IR_OBJECT_DETECTED` is posted to `xLEDQueue` from ISR context. The `LEDControllerTask` immediately overrides the distance-based state: **all four LEDs blink at 100% duty** (e.g., 500ms on / 500ms off cycle) regardless of what the ultrasonic sensor reports. When the object is removed, `IR_OBJECT_REMOVED` restores ultrasonic-driven mode.
 
 > [!NOTE]
 > The IR blink override is intentionally higher priority than the ultrasonic cascade. The IR sensor is designed for close-contact detection (< 10 cm), which should always be visually distinct regardless of what the distance sensor measures.
@@ -242,7 +242,7 @@ At 3.3V and Vf = 2.0V for a typical red LED:
 I = (Vcc - Vf) / R = (3.3V - 2.0V) / 220Ω = 1.3V / 220Ω ≈ 5.9mA
 ```
 
-The STM32L476's GPIO **source/sink current limit is 25mA per pin** and **80mA total across all I/O pins** (package limit). At 5.9mA per LED × 4 LEDs = **23.6mA total** — well within the safe operating area.
+The STM32L476's GPIO **source/sink current limit is 25mA per pin** and **80mA total across all I/O pins** (package limit). At 5.9mA per LED × 4 LEDs = **23.6mA total**: well within the safe operating area.
 
 ---
 
@@ -270,9 +270,9 @@ When the button is **pressed**: PB10 = LOW (shorted to GND through button).
 The 10kΩ pull-up ensures a clean, defined HIGH level at rest. Without the pull-up, PB10 would float (undefined voltage) when the button is open, causing spurious triggers.
 
 > [!IMPORTANT]
-> This button's state is read by the **bootloader** (not just the application). If PB10 is LOW at power-on reset (i.e., held down while resetting), the bootloader enters **XMODEM OTA mode**. Releasing it before reset keeps normal boot behavior. This is why the pull-up resistor is critical — without it, a floating PB10 could accidentally trigger OTA mode on every reset.
+> This button's state is read by the **bootloader** (not just the application). If PB10 is LOW at power-on reset (i.e., held down while resetting), the bootloader enters **XMODEM OTA mode**. Releasing it before reset keeps normal boot behavior. This is why the pull-up resistor is critical: without it, a floating PB10 could accidentally trigger OTA mode on every reset.
 
-**Application function**: Short press (not during reset) → posts `CMD_FLASH` to `xLEDQueue` — all LEDs flash rapidly three times.
+**Application function**: Short press (not during reset) → posts `CMD_FLASH` to `xLEDQueue`: all LEDs flash rapidly three times.
 
 ---
 
@@ -290,7 +290,7 @@ USB Micro-B ──→ ST-Link USB ──→ Nucleo Board
     HC-SR04 VCC      HW-201 VCC         LEDs, Buttons,
     (TRIG signal      (OUT pin           MCU GPIO, all
      goes TO MCU       stays at           3.3V logic
-     at 3.3V)          3.3V — safe)
+     at 3.3V)          3.3V: safe)
          │
      ECHO pin ──[Voltage Divider]──→ PB6 (3.3V after divider)
 
@@ -302,7 +302,7 @@ Power Budget (approximate):
   ─────────────────────────────────────────────────
   Total 5V:     ~15mA (only HC-SR04)
   Total 3.3V:   ~54mA (all other components)
-  USB can supply 500mA — well within budget.
+  USB can supply 500mA: well within budget.
 ```
 
 The Nucleo board's on-board **LDO regulator** (LD39050PU33R, 500mA max) powers the 3.3V rail from the 5V USB input. Ensure the USB host (PC) provides adequate current if additional peripherals are added.
@@ -311,7 +311,7 @@ The Nucleo board's on-board **LDO regulator** (LD39050PU33R, 500mA max) powers t
 
 ## 8. Hardware Photos
 
-> 📸 **[Hardware Photo: Full breadboard assembly — Nucleo board, HC-SR04, HW-201, 4 LEDs, button]**
+> 📸 **[Hardware Photo: Full breadboard assembly: Nucleo board, HC-SR04, HW-201, 4 LEDs, button]**
 > *(Contribute one via PR! Shows the complete wired-up system on a breadboard.)*
 
 > 📸 **[Hardware Photo: Close-up of voltage divider circuit for HC-SR04 ECHO pin]**
@@ -336,10 +336,10 @@ This is the single most important hardware caution in this project.
 
 | Device | Supply | Output Logic | Safe for STM32 GPIO? |
 |---|---|---|---|
-| HC-SR04 TRIG input | 5V device | Accepts 3.3V HIGH as valid input | ✅ Yes — 3.3V MCU output is recognized as HIGH by 5V sensor |
-| HC-SR04 ECHO output | 5V device | **Outputs 5V HIGH** | ❌ **No — must use voltage divider** |
-| HW-201 OUT | 3.3V supply | Outputs 3.3V HIGH | ✅ Yes — safe at 3.3V |
-| External button | 3.3V pull-up | — | ✅ Yes |
+| HC-SR04 TRIG input | 5V device | Accepts 3.3V HIGH as valid input | ✅ Yes: 3.3V MCU output is recognized as HIGH by 5V sensor |
+| HC-SR04 ECHO output | 5V device | **Outputs 5V HIGH** | ❌ **No: must use voltage divider** |
+| HW-201 OUT | 3.3V supply | Outputs 3.3V HIGH | ✅ Yes: safe at 3.3V |
+| External button | 3.3V pull-up |: | ✅ Yes |
 
 **The HC-SR04 TRIG pin is safe to drive directly from the MCU** (3.3V MCU output → 5V device input). The 5V HC-SR04 sees 3.3V as a valid HIGH because its input threshold is well below 3.3V.
 
@@ -355,7 +355,7 @@ This is the single most important hardware caution in this project.
 | Max total I/O current (all pins combined) | 80mA |
 
 > [!WARNING]
-> **PA8 (LED4, TIM1_CH1) is NOT 5V tolerant on the STM32L476.** Check the STM32L476 datasheet Table 16 (I/O static characteristics) and the pin table for FT (5V Tolerant) markings before connecting any signal. PB6 is 5V tolerant (FT), which is why it was chosen for ECHO — but the voltage divider is still recommended as good practice.
+> **PA8 (LED4, TIM1_CH1) is NOT 5V tolerant on the STM32L476.** Check the STM32L476 datasheet Table 16 (I/O static characteristics) and the pin table for FT (5V Tolerant) markings before connecting any signal. PB6 is 5V tolerant (FT), which is why it was chosen for ECHO: but the voltage divider is still recommended as good practice.
 
 ### ⚠️ Shared EXTI Line Caution
 
@@ -367,14 +367,14 @@ The HC-SR04 needs at least **60ms** between trigger pulses to allow the echo fro
 
 ### ⚠️ PB10 Button at Reset = OTA Mode
 
-If PB10 is held LOW at power-on or hardware reset, the **bootloader enters XMODEM OTA mode**. Be aware of this when wiring or debugging — accidentally shorting PB10 to GND during a reset will put the device in OTA mode rather than launching the application. The 10kΩ pull-up must be correctly installed.
+If PB10 is held LOW at power-on or hardware reset, the **bootloader enters XMODEM OTA mode**. Be aware of this when wiring or debugging: accidentally shorting PB10 to GND during a reset will put the device in OTA mode rather than launching the application. The 10kΩ pull-up must be correctly installed.
 
 ### ✅ Safe GPIO Drive Strength
 
 The default STM32 GPIO output speed (LOW speed, 2MHz slew rate) is adequate for all signals in this project:
-- TRIG pulse: 10µs width — well above any slew rate concern
-- PWM LEDs: 1kHz frequency — easily driven at low speed
-- UART TX: 115200 baud → bit period = 8.7µs — low speed sufficient
+- TRIG pulse: 10µs width: well above any slew rate concern
+- PWM LEDs: 1kHz frequency: easily driven at low speed
+- UART TX: 115200 baud → bit period = 8.7µs: low speed sufficient
 
 No pins need to be configured for HIGH or VERY HIGH speed (which would increase EMI and power consumption unnecessarily).
 

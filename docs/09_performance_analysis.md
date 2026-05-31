@@ -1,6 +1,6 @@
 # Performance Analysis
 
-> **Quantitative measurements of the system's runtime behaviour** — stack usage, heap footprint, ISR latency, CPU utilization estimate, and build size breakdown. These numbers prove the system is production-quality, not just a demo.
+> **Quantitative measurements of the system's runtime behaviour**: stack usage, heap footprint, ISR latency, CPU utilization estimate, and build size breakdown. These numbers prove the system is production-quality, not just a demo.
 
 ---
 
@@ -19,10 +19,10 @@
 
 | Region | Used | Available | % Used |
 |--------|------|-----------|--------|
-| Flash | 8,956 bytes | 32,768 bytes (pages 0–15) | **27.3%** |
+| Flash | 8,956 bytes | 32,768 bytes (pages 0:15) | **27.3%** |
 | RAM | 256 bytes | 98,304 bytes | **0.3%** |
 
-The bootloader uses almost no RAM — it runs entirely from the stack with no heap allocation.
+The bootloader uses almost no RAM: it runs entirely from the stack with no heap allocation.
 
 ---
 
@@ -55,8 +55,8 @@ Stack sizes are defined at task creation (`xTaskCreate`). High-water mark is the
 *\*High-water marks are estimates based on code analysis. To measure exactly, add `uxTaskGetStackHighWaterMark(NULL)` to each task and print via `status` command.*
 
 ### Why TerminalTask and LEDControllerTask get 512 words
-- `TerminalTask` calls `strcmp`, `printf`, and assembles strings — these need stack space for local character arrays and format buffers.
-- `LEDControllerTask` runs `vTaskDelay` inside nested loops (cascade/flash patterns) with local loop variables — deeper call stack.
+- `TerminalTask` calls `strcmp`, `printf`, and assembles strings: these need stack space for local character arrays and format buffers.
+- `LEDControllerTask` runs `vTaskDelay` inside nested loops (cascade/flash patterns) with local loop variables: deeper call stack.
 
 ### How to instrument your own measurements
 
@@ -71,22 +71,22 @@ printf("[STACK] %s: %u words remaining\r\n",
 
 ---
 
-## ISR Latency — HC-SR04 Echo Measurement
+## ISR Latency: HC-SR04 Echo Measurement
 
 The most time-critical path in the system is the EXTI interrupt on PB6 (HC-SR04 ECHO). The accuracy of the distance measurement depends on how quickly the ISR captures `TIM5->CNT`.
 
 | Stage | Time | Notes |
 |-------|------|-------|
 | ECHO pin goes HIGH | 0 µs | Reference |
-| Cortex-M4 IRQ response | ~100–200 ns | From pin change to ISR entry (12 cycles at 80MHz) |
-| `TIM5->CNT` captured | ~12–14 cycles | ~150–175 ns after IRQ |
+| Cortex-M4 IRQ response | ~100:200 ns | From pin change to ISR entry (12 cycles at 80MHz) |
+| `TIM5->CNT` captured | ~12:14 cycles | ~150:175 ns after IRQ |
 | Total latency | **< 400 ns** | Well under 1 µs TIM5 resolution |
 | TIM5 tick resolution | 1 µs | PSC=79, SYSCLK=80MHz |
 
 **Accuracy implication**: At the speed of sound (343 m/s), 1 µs of timing error corresponds to **0.017mm** of distance error. The overall HC-SR04 accuracy (±3mm datasheet) is dominated by acoustic beam spread, not our timing.
 
 ### FreeRTOS interrupt overhead
-The EXTI ISR calls `xQueueSendFromISR` which may trigger `portYIELD_FROM_ISR`. A context switch on Cortex-M4 takes approximately 10–15 µs via PendSV. This does **not** affect the timing capture since `TIM5->CNT` is read before the queue send.
+The EXTI ISR calls `xQueueSendFromISR` which may trigger `portYIELD_FROM_ISR`. A context switch on Cortex-M4 takes approximately 10:15 µs via PendSV. This does **not** affect the timing capture since `TIM5->CNT` is read before the queue send.
 
 ---
 
@@ -104,7 +104,7 @@ This is a rough estimate based on task periods and worst-case execution times.
 | FreeRTOS scheduler | Per tick (1ms) | ~5 µs | **0.5%** |
 | EXTI ISR (HC-SR04) | Every 500 ms | ~2 µs | **< 0.01%** |
 | USART1 ISR | Per character | ~1 µs | **< 0.01%** |
-| **Total estimated** | — | — | **< 1%** |
+| **Total estimated** |: |: | **< 1%** |
 
 The CPU is sleeping (in `__WFI` via FreeRTOS Idle Task) for approximately **99% of the time**. This is exactly the correct design for a sensor-driven embedded system.
 

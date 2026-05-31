@@ -10,7 +10,7 @@
 ![Bootloader](https://img.shields.io/badge/Bootloader-Custom%20%2B%20XMODEM-red)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
 
-### A production-grade embedded system featuring a custom secure bootloader with XMODEM OTA updates, five concurrent FreeRTOS tasks, hardware PWM, ultrasonic distance sensing, IR proximity detection, and a full serial CLI — all running on the STM32L476RG Nucleo board.
+### A production-grade embedded system featuring a custom secure bootloader with XMODEM OTA updates, five concurrent FreeRTOS tasks, hardware PWM, ultrasonic distance sensing, IR proximity detection, and a full serial CLI: all running on the STM32L476RG Nucleo board.
 
 </div>
 
@@ -60,7 +60,7 @@ flowchart TD
 
     OTA --> K[XMODEM-CRC receiver active\nSend 'C' prompt on UART]
     K --> L[Receive 128-byte packets\nwith CRC verification]
-    L --> M[Erase Flash pages 16–255\nProgram in 8-byte double-words]
+    L --> M[Erase Flash pages 16:255\nProgram in 8-byte double-words]
     M --> N[Update AppHeader CRC\nin Flash]
     N --> O([🔄 System Reboot])
 
@@ -96,18 +96,18 @@ flowchart TD
 | Component | Part Number | Role |
 |---|---|---|
 | Microcontroller Board | STM32L476RG Nucleo-64 | Main MCU (Cortex-M4 @ 80 MHz, 96 KB RAM, 1 MB Flash) |
-| Ultrasonic Sensor | HC-SR04 | Distance measurement (2–400 cm) |
+| Ultrasonic Sensor | HC-SR04 | Distance measurement (2:400 cm) |
 | IR Proximity Sensor | HW-201 | Object detection override |
 | LEDs (×4) | Standard 5mm (any colour) | PWM-controlled distance indicator bar |
 | Push Button (external) | Tactile SPST | OTA trigger + LED flash command |
-| USB-A to Mini-B cable | — | Power + ST-Link programming |
-| Breadboard + jumper wires | — | Wiring |
+| USB-A to Mini-B cable |: | Power + ST-Link programming |
+| Breadboard + jumper wires |: | Wiring |
 
 ---
 
 ## 🏗 System Architecture
 
-The system is split into **two completely independent PlatformIO projects** that live in separate Flash regions and never share code. This separation means a corrupted application can never brick the device — the bootloader is always intact.
+The system is split into **two completely independent PlatformIO projects** that live in separate Flash regions and never share code. This separation means a corrupted application can never brick the device: the bootloader is always intact.
 
 ```
 Flash Memory Layout
@@ -176,8 +176,8 @@ graph LR
 | **HC-SR04 TRIG** | PC7 | GPIO Output | OUT | 10 µs pulse to trigger |
 | **HC-SR04 ECHO** | PB6 | EXTI6 (EXTI9_5_IRQ) | IN | Rising→start TIM5, Falling→calc distance |
 | **HW-201 IR OUT** | PA7 | EXTI7 (EXTI9_5_IRQ) | IN | Active LOW; falling = object detected |
-| **UART1 TX** | PA9 | USART1 | OUT | 115200 8N1 — CLI output + XMODEM |
-| **UART1 RX** | PA10 | USART1 | IN | 115200 8N1 — CLI input + XMODEM |
+| **UART1 TX** | PA9 | USART1 | OUT | 115200 8N1: CLI output + XMODEM |
+| **UART1 RX** | PA10 | USART1 | IN | 115200 8N1: CLI input + XMODEM |
 | **Blue Button (onboard)** | PC13 | GPIO Input (EXTI13) | IN | Active LOW; triggers LED cascade |
 | **External Button (OTA trigger)** | PB10 | GPIO Input | IN | LOW on reset → OTA mode; HIGH = normal boot |
 | **Heartbeat LED (onboard LD2)** | PA5 | GPIO Output | OUT | Toggled every 1 s by HeartbeatTask |
@@ -195,7 +195,7 @@ graph LR
 
 ---
 
-### Step 1 — Clone the Repository
+### Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/STM32-FreeRTOS-Advanced-Embedded-System.git
@@ -204,7 +204,7 @@ cd STM32-FreeRTOS-Advanced-Embedded-System
 
 ---
 
-### Step 2 — Open Projects in PlatformIO
+### Step 2: Open Projects in PlatformIO
 
 This repository contains **two separate PlatformIO projects**. Open each one individually in VS Code:
 
@@ -215,10 +215,10 @@ File → Open Folder → FreeRTOS_App_L476
 
 ---
 
-### Step 3 — Flash the Bootloader
+### Step 3: Flash the Bootloader
 
 > [!IMPORTANT]
-> Flash the bootloader **first**. It must occupy `0x08000000`–`0x08007FFF` before the application is programmed.
+> Flash the bootloader **first**. It must occupy `0x08000000`:`0x08007FFF` before the application is programmed.
 
 1. Open the `SecureBootloader_L476` folder in VS Code (PlatformIO will auto-detect it)
 2. Connect your Nucleo board via USB
@@ -231,7 +231,7 @@ pio run --target upload
 
 ---
 
-### Step 4 — Flash the Application
+### Step 4: Flash the Application
 
 The application uses a **post-build Python script** (`inject_crc.py`) that automatically computes CRC32 over the `.bin` file and patches the `AppHeader` struct before flashing. PlatformIO runs this automatically on build.
 
@@ -252,7 +252,7 @@ Compiling .pio/build/nucleo_l476rg/src/main.o
 
 ---
 
-### Step 5 — Open the Serial Terminal
+### Step 5: Open the Serial Terminal
 
 Connect with any serial terminal at **115200 baud, 8N1** (e.g., Tera Term, PuTTY, VS Code Serial Monitor):
 
@@ -304,9 +304,9 @@ All commands are sent over UART1 at 115200 baud. Commands are case-sensitive and
 OTA (Over-The-Air, in this case Over-UART) updates let you reprogram the application firmware **without a debugger**. The bootloader handles all flash erase and programming operations.
 
 > [!WARNING]
-> The OTA process **erases all application Flash** (pages 16–255). Ensure your new firmware binary has been built and CRC-patched (`inject_crc.py` run) before initiating the transfer.
+> The OTA process **erases all application Flash** (pages 16:255). Ensure your new firmware binary has been built and CRC-patched (`inject_crc.py` run) before initiating the transfer.
 
-### Step 1 — Enter OTA Mode
+### Step 1: Enter OTA Mode
 
 Hold **PB10 (external breadboard button) LOW** while pressing the **RESET button** (or cycling power). Release after reset.
 
@@ -319,11 +319,11 @@ CCCCCCCCCC
 
 The repeating `C` characters on the serial terminal signal that the XMODEM-CRC receiver is waiting.
 
-### Step 2 — Configure Tera Term
+### Step 2: Configure Tera Term
 
 Open Tera Term and connect to the Nucleo's COM port at **115200 baud, 8N1**. You should see the `CCCCCC...` prompt.
 
-### Step 3 — Send the Firmware via XMODEM
+### Step 3: Send the Firmware via XMODEM
 
 In Tera Term:
 
@@ -347,7 +347,7 @@ Block 847 OK
 Transfer complete.
 ```
 
-### Step 4 — Watch the Automatic Reboot
+### Step 4: Watch the Automatic Reboot
 
 When all blocks are received and programmed:
 
@@ -357,57 +357,57 @@ When all blocks are received and programmed:
 [BOOTLOADER] CRC OK. Rebooting into application...
 ```
 
-The board reboots, the bootloader re-verifies CRC, and jumps to the new firmware. The onboard **PA5 heartbeat LED** begins blinking — confirming the new application is running.
+The board reboots, the bootloader re-verifies CRC, and jumps to the new firmware. The onboard **PA5 heartbeat LED** begins blinking: confirming the new application is running.
 
 ---
 
 ## 🧠 What I Learned / Engineering Challenges
 
-### 🐛 Bug #1 — The XMODEM Unaligned Memory Access Fault
+### 🐛 Bug #1: The XMODEM Unaligned Memory Access Fault
 
 **Symptom:** XMODEM transfers would stall permanently after exactly one 128-byte packet (0.6% of a typical firmware image). The STM32 appeared to lock up silently.
 
-**Investigation:** Attached OpenOCD debugger during the transfer. The processor had entered a **HardFault** handler. Inspected the `SCB->CFSR` (Configurable Fault Status Register) — the `BFARVALID` and `IBUSERR` bits were set, indicating a bus fault on a data access. Traced the fault address back to a Flash programming loop.
+**Investigation:** Attached OpenOCD debugger during the transfer. The processor had entered a **HardFault** handler. Inspected the `SCB->CFSR` (Configurable Fault Status Register): the `BFARVALID` and `IBUSERR` bits were set, indicating a bus fault on a data access. Traced the fault address back to a Flash programming loop.
 
 **Root Cause:** The XMODEM packet structure has a 3-byte header (`SOH`, block number, complement), so the actual 128-byte payload starts at `packet[3]`. When the code tried to read 8 bytes at a time (for STM32 double-word Flash programming) using a pointer cast:
 ```c
-// BUGGY — packet[3] is at an odd offset, causing unaligned 64-bit read
+// BUGGY: packet[3] is at an odd offset, causing unaligned 64-bit read
 uint64_t dw = *(uint64_t*)(&packet[3 + i]);
 HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, dw);
 ```
-The ARM Cortex-M4 does not support unaligned 64-bit (double-word) memory accesses by default — it raises a bus fault.
+The ARM Cortex-M4 does not support unaligned 64-bit (double-word) memory accesses by default: it raises a bus fault.
 
-**Fix — one line:**
+**Fix: one line:**
 ```c
-// CORRECT — memcpy handles unaligned src safely; compiler emits byte-wise load
+// CORRECT: memcpy handles unaligned src safely; compiler emits byte-wise load
 uint64_t dw;
 memcpy(&dw, &packet[3 + i], 8);
 HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, dw);
 ```
 
-**Lesson:** Never dereference a `uint64_t*` (or any wide pointer) cast from an arbitrary buffer offset. Use `memcpy` for unaligned reads. This rule is baked into the C standard — it's undefined behaviour regardless of architecture, but on Cortex-M4 without unaligned access support for multi-word operations, it kills the system.
+**Lesson:** Never dereference a `uint64_t*` (or any wide pointer) cast from an arbitrary buffer offset. Use `memcpy` for unaligned reads. This rule is baked into the C standard: it's undefined behaviour regardless of architecture, but on Cortex-M4 without unaligned access support for multi-word operations, it kills the system.
 
 ---
 
-### 🐛 Bug #2 — The TIM2 Prescaler Shadow Register Bug (HC-SR04 Always Read 4 cm)
+### 🐛 Bug #2: The TIM2 Prescaler Shadow Register Bug (HC-SR04 Always Read 4 cm)
 
 **Symptom:** The HC-SR04 sensor always returned approximately **4 cm**, regardless of actual distance. Even with a wall 1 metre away, the distance stayed locked at 4 cm.
 
 **Investigation:** The HC-SR04 echo pulse width is measured with TIM5 running at 1 MHz (1 µs per tick). After the falling-edge EXTI fires on PB6, the timer count is read and divided by 58 to get centimetres. The math was correct. Suspicion shifted to the **timer frequency**.
 
-Checked TIM5's actual tick rate with a logic analyser: it was running far faster than 1 MHz — meaning the count was much smaller than expected for a given distance, producing artificially short (close) readings. The prescaler register was not taking effect.
+Checked TIM5's actual tick rate with a logic analyser: it was running far faster than 1 MHz: meaning the count was much smaller than expected for a given distance, producing artificially short (close) readings. The prescaler register was not taking effect.
 
-**Root Cause:** On all STM32 timers, the prescaler (`PSC`) register is **shadow-buffered**. Writing to `TIM5->PSC` loads the *shadow* register, but the actual divider only updates at the next **Update Event (UEV)**. By default, the first UEV is generated by timer overflow — which on a 32-bit timer running at 80 MHz could be over 53 seconds away. The timer ran at full speed until then.
+**Root Cause:** On all STM32 timers, the prescaler (`PSC`) register is **shadow-buffered**. Writing to `TIM5->PSC` loads the *shadow* register, but the actual divider only updates at the next **Update Event (UEV)**. By default, the first UEV is generated by timer overflow: which on a 32-bit timer running at 80 MHz could be over 53 seconds away. The timer ran at full speed until then.
 
 ```c
-// BUGGY — PSC written but never activated
+// BUGGY: PSC written but never activated
 TIM5->PSC = 79;  // intend 80 MHz / 80 = 1 MHz
 
 // Missing the magic line:
 // TIM5->EGR = TIM_EGR_UG;  ← forces immediate Update Event → PSC loads NOW
 ```
 
-**Fix — one line:**
+**Fix: one line:**
 ```c
 TIM5->PSC = 79;          // 80 MHz / (79+1) = 1 MHz (1 µs per tick)
 TIM5->EGR = TIM_EGR_UG; // Force update event → shadow registers load immediately
@@ -418,12 +418,12 @@ TIM5->SR  = 0;           // Clear the UIF flag the EGR write just set
 
 ---
 
-### 🏛 Architectural Insight — Separating Bootloader from Application
+### 🏛 Architectural Insight: Separating Bootloader from Application
 
 Splitting firmware into two independent PlatformIO projects with a hard Flash boundary (`0x08008000`) and a verified handshake (`AppHeader` magic + CRC32) taught several production-grade lessons:
 
-- **VTOR relocation is mandatory:** The application's vector table must be relocated (`SCB->VTOR = 0x08008000`) before any interrupt can fire. If the bootloader leaves VTOR at 0, every interrupt in the application routes to the bootloader's (nonexistent) handlers — instant fault.
-- **MSP must be re-initialised:** Jumping to the app's reset handler does *not* automatically set the Main Stack Pointer. The bootloader must read MSP from `*(uint32_t*)0x08008000` and set it with assembly before the jump, or the app starts with the bootloader's stack pointer — stack corruption is guaranteed.
+- **VTOR relocation is mandatory:** The application's vector table must be relocated (`SCB->VTOR = 0x08008000`) before any interrupt can fire. If the bootloader leaves VTOR at 0, every interrupt in the application routes to the bootloader's (nonexistent) handlers: instant fault.
+- **MSP must be re-initialised:** Jumping to the app's reset handler does *not* automatically set the Main Stack Pointer. The bootloader must read MSP from `*(uint32_t*)0x08008000` and set it with assembly before the jump, or the app starts with the bootloader's stack pointer: stack corruption is guaranteed.
 - **Peripheral state must be clean:** Any peripheral the bootloader initialised (UART, GPIO, CRC) must be fully de-initialised before jumping. The application's `HAL_Init()` assumes a clean hardware state; leftover peripheral configurations cause hard-to-diagnose init failures.
 
 ---
@@ -495,7 +495,7 @@ Full engineering documentation lives in the [`docs/`](docs/) folder:
 | [📖 FreeRTOS Application](docs/freertos_app.md) | All 5 tasks documented: priorities, stack sizes, timing, inter-task communication via queues; distance-to-LED mapping algorithm; IR override logic |
 | [📖 Hardware Wiring Guide](docs/hardware_wiring.md) | Complete pin mapping tables, breadboard wiring guide, signal timing diagrams for HC-SR04 and HW-201, photo placeholders |
 | [📖 OTA Update Guide](docs/ota_update_guide.md) | Step-by-step XMODEM OTA guide with screenshots, troubleshooting common failures (NAK loops, timeout, incomplete transfer) |
-| [📖 Bugs & Engineering Fixes](docs/bugs_and_fixes.md) | Detailed post-mortems: unaligned access HardFault, TIM2 PSC shadow register, TIM2/TIM5 conflict resolution — all with register-level analysis |
+| [📖 Bugs & Engineering Fixes](docs/bugs_and_fixes.md) | Detailed post-mortems: unaligned access HardFault, TIM2 PSC shadow register, TIM2/TIM5 conflict resolution: all with register-level analysis |
 
 ---
 
@@ -503,10 +503,10 @@ Full engineering documentation lives in the [`docs/`](docs/) folder:
 
 Contributions are very welcome! Here's what would be most valuable:
 
-- **Hardware photos** — shots of your wired-up board (breadboard, Nucleo, sensors) submitted via PR to `docs/images/`
-- **Bug reports** — open a GitHub Issue with your observed behaviour, MCU register state, and debug output
-- **Additional CLI commands** — fork, implement, and submit a PR with matching documentation
-- **Port to other STM32 variants** — the bootloader design is board-agnostic with minor linker script changes
+- **Hardware photos**: shots of your wired-up board (breadboard, Nucleo, sensors) submitted via PR to `docs/images/`
+- **Bug reports**: open a GitHub Issue with your observed behaviour, MCU register state, and debug output
+- **Additional CLI commands**: fork, implement, and submit a PR with matching documentation
+- **Port to other STM32 variants**: the bootloader design is board-agnostic with minor linker script changes
 
 ### Development Conventions
 
@@ -521,7 +521,7 @@ Contributions are very welcome! Here's what would be most valuable:
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for full terms.
 
 ```
-MIT License — Copyright (c) 2026
+MIT License: Copyright (c) 2026
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -544,6 +544,6 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
 **Built with FreeRTOS · STM32 HAL · PlatformIO · ARM GCC**
 
-*If this project helped you, please consider giving it a ⭐ — it helps others find it.*
+*If this project helped you, please consider giving it a ⭐: it helps others find it.*
 
 </div>

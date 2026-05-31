@@ -1,19 +1,19 @@
 # FreeRTOS_App_L476
 
-> **A production-grade FreeRTOS application for the STM32L476RG** — 5 concurrent tasks, hardware PWM LED bar graph, real-time ultrasonic distance sensing, IR proximity detection, and an interactive serial CLI. Designed to run on top of the [SecureBootloader_L476](../SecureBootloader_L476/).
+> **A production-grade FreeRTOS application for the STM32L476RG**: 5 concurrent tasks, hardware PWM LED bar graph, real-time ultrasonic distance sensing, IR proximity detection, and an interactive serial CLI. Designed to run on top of the [SecureBootloader_L476](../SecureBootloader_L476/).
 
 ---
 
 ## What This Does
 
-This is the main application — the firmware that the Bootloader verifies and launches. It demonstrates multiple advanced embedded systems concepts running simultaneously in real-time:
+This is the main application: the firmware that the Bootloader verifies and launches. It demonstrates multiple advanced embedded systems concepts running simultaneously in real-time:
 
 | Capability | How It Works |
 |-----------|--------------|
 | **Multi-tasking** | 5 FreeRTOS tasks running concurrently, scheduled by the RTOS kernel |
-| **Hardware PWM** | TIM1/TIM2/TIM3 drive LEDs directly — zero CPU usage for fading |
+| **Hardware PWM** | TIM1/TIM2/TIM3 drive LEDs directly: zero CPU usage for fading |
 | **Ultrasonic ranging** | HC-SR04 measured via EXTI + TIM5 microsecond stopwatch |
-| **IR detection** | HW-201 triggers on both edges — detects presence AND removal |
+| **IR detection** | HW-201 triggers on both edges: detects presence AND removal |
 | **Serial CLI** | Interrupt-driven UART, type commands from any terminal |
 | **Sensor gating** | Nothing runs until you type `sensor start` |
 
@@ -37,7 +37,7 @@ This is the main application — the firmware that the Bootloader verifies and l
 | Heartbeat LED (onboard) | PA5 | GPIO Output | Blinks 1Hz to confirm RTOS running |
 
 > 📸 **[Hardware Photo: Full pin mapping on breadboard]**
-> *(Contribute a photo via PR — see [CONTRIBUTING.md](../CONTRIBUTING.md)!)*
+> *(Contribute a photo via PR: see [CONTRIBUTING.md](../CONTRIBUTING.md)!)*
 
 ---
 
@@ -62,7 +62,7 @@ The post-build script `inject_crc.py` runs automatically after compilation and p
 ```bash
 pio run
 # Output binary: .pio/build/nucleo_l476rg/firmware.bin
-# This binary already has CRC injected — ready for XMODEM transfer
+# This binary already has CRC injected: ready for XMODEM transfer
 ```
 
 ---
@@ -83,19 +83,8 @@ Type 'help' for commands.
 
 ### After typing `sensor start`
 
-```
-> sensor start
-[CLI] Starting Real-Time Sensors...
-
-[HC-SR04] Distance: 45 cm
-[HC-SR04] Distance: 43 cm
-[HC-SR04] Distance: 22 cm
-[HC-SR04] Distance: 8 cm
-
-[HW-201] WARNING! OBSTACLE DETECTED!
-[HW-201] Obstacle Removed.
-```
 <img width="1913" height="1079" alt="Screenshot 2026-05-31 194029" src="https://github.com/user-attachments/assets/522698ed-9411-4755-a91d-d396c60b9c14" />
+
 
 
 ### CLI Command Reference
@@ -127,7 +116,7 @@ Type 'help' for commands.
 
 | File | Description |
 |------|-------------|
-| [`src/main.c`](src/main.c) | All task code, ISRs, hardware init — the full application |
+| [`src/main.c`](src/main.c) | All task code, ISRs, hardware init: the full application |
 | [`inject_crc.py`](inject_crc.py) | Post-build Python script: reads .bin, calculates CRC32, patches AppHeader |
 | [`app_offset.ld`](app_offset.ld) | Linker script: places code at 0x08008000, defines `.app_header` section |
 | [`platformio.ini`](platformio.ini) | Build config: custom upload script (bootloader-aware), extra_scripts |

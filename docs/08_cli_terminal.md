@@ -18,7 +18,7 @@
 
 ## 1. How the CLI Works
 
-The CLI is a classic **interrupt-driven, queue-buffered, task-parsed** terminal â€” a design pattern used throughout professional embedded firmware. Here is the data flow from keypress to hardware response:
+The CLI is a classic **interrupt-driven, queue-buffered, task-parsed** terminal : a design pattern used throughout professional embedded firmware. Here is the data flow from keypress to hardware response:
 
 ```
 User types a character in terminal
@@ -63,7 +63,7 @@ HAL_UART_Transmit sends response back to terminal
 ### The Alternative: Polling UART
 
 ```c
-// BAD: polling approach â€” wastes CPU time spinning on USART status
+// BAD: polling approach : wastes CPU time spinning on USART status
 while (1) {
     if (USART1->ISR & USART_ISR_RXNE) {   // check "data ready" flag in a tight loop
         char c = USART1->RDR;              // read received byte
@@ -83,16 +83,16 @@ In a polling design, the CPU is locked in a busy-wait loop checking whether a ch
 ```
 User types 'h'
      â”‚
-     â–¼
+     â:¼
 USART1 peripheral finishes receiving the byte
      â”‚
-     â–¼ (hardware generates RXNE interrupt â€” takes ~dozen cycles)
+     â:¼ (hardware generates RXNE interrupt : takes ~dozen cycles)
 USART1_IRQHandler:
      â”œâ”€ Read byte from RDR in one instruction (clears RXNE automatically)
      â”œâ”€ xQueueSendFromISR â†’ posts byte to xRXQueue
      â””â”€ portYIELD_FROM_ISR â†’ TerminalTask unblocks if higher priority
      â”‚
-     â–¼ (ISR exits â€” total ISR time < 1Âµs)
+     â:¼ (ISR exits : total ISR time < 1Âµs)
 CPU resumes whatever it was doing, or switches to TerminalTask
 ```
 
@@ -118,28 +118,28 @@ void USART1_IRQHandler(void) {
     if (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_RXNE)) {
 
         // Read the received byte.
-        // IMPORTANT: Read RDR exactly once â€” each read clears RXNE and advances the shift register.
+        // IMPORTANT: Read RDR exactly once : each read clears RXNE and advances the shift register.
         // Reading twice would consume the next byte before it is ready.
         uint8_t received_byte = (uint8_t)(USART1->RDR & 0xFF);
-        // The 0xFF mask is defensive â€” RDR is 9 bits wide (for 9-bit UART mode);
+        // The 0xFF mask is defensive : RDR is 9 bits wide (for 9-bit UART mode);
         // we're in 8-bit mode so only bits [7:0] are valid anyway.
 
         // Post byte to the receive queue using ISR-safe API.
-        // - xRXQueue has 64 slots â€” if full, this silently drops the byte (pdFAIL returned).
-        // - We pass NULL for timeout â€” ISR functions must NEVER block.
+        // - xRXQueue has 64 slots : if full, this silently drops the byte (pdFAIL returned).
+        // - We pass NULL for timeout : ISR functions must NEVER block.
         // - xHigherPriorityTaskWoken will be set to pdTRUE if TerminalTask was sleeping
         //   on xQueueReceive and is now ready to run.
         xQueueSendFromISR(xRXQueue, &received_byte, &xHigherPriorityTaskWoken);
     }
 
     // â”€â”€ Check for UART errors (optional but good practice) â”€â”€
-    // ORE = Overrun Error: new byte arrived before RDR was read â€” we lost a byte
+    // ORE = Overrun Error: new byte arrived before RDR was read : we lost a byte
     // NE  = Noise Error: line noise caused a framing issue
     // FE  = Framing Error: stop bit not detected where expected
     if (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_ORE) ||
         __HAL_UART_GET_FLAG(&huart1, UART_FLAG_NE)  ||
         __HAL_UART_GET_FLAG(&huart1, UART_FLAG_FE))  {
-        // Clear all error flags â€” do this by reading SR then RDR
+        // Clear all error flags : do this by reading SR then RDR
         __HAL_UART_CLEAR_OREFLAG(&huart1);
         __HAL_UART_CLEAR_NEFLAG(&huart1);
         __HAL_UART_CLEAR_FEFLAG(&huart1);
@@ -178,7 +178,7 @@ void TerminalTask(void *pvParameters) {
             HAL_UART_Transmit(&huart1, &byte, 1, 10);
 
             if (byte == '\r' || byte == '\n') {
-                // Line complete â€” null-terminate and dispatch
+                // Line complete : null-terminate and dispatch
                 line_buf[pos] = '\0';
 
                 if (pos > 0) { // ignore empty lines (just pressing Enter)
@@ -295,126 +295,13 @@ void parse_command(const char *cmd) {
 
 ## 5. Example Session
 
-The following is a complete annotated terminal transcript showing a typical operating session. Characters typed by the user are shown; responses are from the firmware.
+The following is a complete annotated terminal transcript showing a typical operating session.
 
-```
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            Terminal Connection Established
-            115200 baud | 8N1 | No flow control
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
-(Power-on or reset â€” bootloader runs first, validates CRC, jumps to app)
-(FreeRTOS starts, all tasks created, scheduler begins)
-
-========================================
-  STM32-FreeRTOS Embedded System v1.0
-  Type 'help' for available commands
-========================================
->
-```
-*(The banner prints within ~50ms of reset. The PA5 onboard LED begins blinking at 1Hz â€” HeartbeatTask is running.)*
-
-```
-> help
-                                            â† user typed "help" + Enter
-Available commands:
-  sensor start  - Arm sensors, enable LED bar graph
-  sensor stop   - Disarm sensors, turn off LEDs
-  led cascade   - Knight Rider sweep pattern (3 passes)
-  led flash     - Blink all LEDs 5x
-  status        - Show uptime and sensor state
-  help          - Show this message
-
->
-```
-
-```
-> status
-                                            â† typed "status" + Enter
-Uptime: 4823 ms | Sensors: DISARMED | IR: CLEAR
-
->
-```
-*(Sensors are disarmed by default â€” LEDs are off, no readings printed)*
-
-```
-> sensor start
-                                            â† typed "sensor start" + Enter
-[OK] Sensors armed. LED bar graph active.
-
-Distance: 47 cm  [----]                    â† SensorTask begins printing every 500ms
-Distance: 46 cm  [----]                    â† no LEDs lit (>30cm threshold)
-Distance: 31 cm  [----]
-Distance: 28 cm  [L4--]                    â† hand approaching: LED4 (farthest) lights up
-Distance: 21 cm  [L4--]
-Distance: 17 cm  [L43-]                    â† LED3 joins (15â€“20cm range)
-Distance: 13 cm  [L432]                    â† LED2 joins
-Distance:  8 cm  [L432]
-Distance:  6 cm  [L432]
-Distance:  4 cm  [L4321]                   â† LED1 joins: all LEDs at 100% (â‰¤5cm)
-
-```
-*(At this point, a different object is waved across the IR sensor)*
-
-```
-*** IR OBSTACLE DETECTED ***               â† IR ISR fires, SensorTask posts LED_CMD_IR_ON
-[All LEDs blinking at 100% â€” IR override active]
-
-*** IR CLEARED ***                         â† object removed, rising edge on PA7
-[Returning to ultrasonic distance mode]
-
-Distance: 35 cm  [----]                    â† hand has moved away
-Distance: 40 cm  [----]
-
->
-```
-
-```
-> led cascade
-                                            â† typed "led cascade" + Enter
-[OK] Running cascade pattern...
-[LEDs sweep: LED1â†’LED2â†’LED3â†’LED4â†’LED3â†’LED2â†’LED1, repeating 3 times]
-Done.
-
->
-```
-
-```
-> led flash
-[OK] Running flash pattern...
-[All four LEDs flash ON/OFF 5 times at 200ms interval]
-Done.
-
->
-```
-
-```
-> sensor stop
-[OK] Sensors stopped. LEDs off.
-
->
-```
-
-```
-> unknowncmd
-[ERR] Unknown command. Type 'help'.
-
->
-```
-
-```
-> status
-Uptime: 38291 ms | Sensors: DISARMED | IR: CLEAR
-
->
-```
-
----
 <img width="1913" height="1079" alt="Screenshot 2026-05-31 194029" src="https://github.com/user-attachments/assets/cd2a355b-356f-4cda-bb0b-dddf9cefb264" />
 
 ## 6. How to Connect
 
-### Option A: Tera Term (Recommended â€” Used in Development)
+### Option A: Tera Term (Recommended : Used in Development)
 
 Tera Term v5.6.1 is the terminal used during development and for XMODEM OTA updates.
 
@@ -432,10 +319,10 @@ Tera Term v5.6.1 is the terminal used during development and for XMODEM OTA upda
 | Stop bits | **1** |
 | Flow control | **None** |
 
-5. Press **Reset** on the Nucleo board â€” the startup banner should appear immediately
+5. Press **Reset** on the Nucleo board : the startup banner should appear immediately
 
 > [!TIP]
-> In Tera Term, enable **Local Echo** under **Setup â†’ Terminal** if you want to see characters as you type them. The firmware also echoes received characters back, so you may see double characters without this â€” disable one or the other.
+> In Tera Term, enable **Local Echo** under **Setup â†’ Terminal** if you want to see characters as you type them. The firmware also echoes received characters back, so you may see double characters without this : disable one or the other.
 
 ### Option B: PuTTY
 
@@ -458,7 +345,7 @@ Tera Term v5.6.1 is the terminal used during development and for XMODEM OTA upda
 1. Build and flash the firmware via PlatformIO
 2. In VS Code, open the **PlatformIO Serial Monitor** (plug icon in the status bar)
 3. Select your port, set baud to **115200**
-4. Line ending: **CR+LF** (or just CR â€” both work)
+4. Line ending: **CR+LF** (or just CR : both work)
 5. Click **Start Monitoring**
 
 > [!NOTE]
@@ -503,7 +390,7 @@ You must explicitly type `sensor start` to arm the system.
 
 **1. Prevents accidental activation on boot**
 
-When the board powers on, the LED bar graph would immediately start reacting to whatever happens to be near the sensor â€” a hand hovering while plugging in the USB cable, a monitor sitting within 30cm, a desk surface reflecting stray pulses. This would appear broken to anyone not expecting it.
+When the board powers on, the LED bar graph would immediately start reacting to whatever happens to be near the sensor : a hand hovering while plugging in the USB cable, a monitor sitting within 30cm, a desk surface reflecting stray pulses. This would appear broken to anyone not expecting it.
 
 Requiring an explicit `sensor start` means the system is in a known, stable, dark state at startup. The engineer is in control of when sensing begins.
 
@@ -556,7 +443,7 @@ void SensorTask(void *pvParameters) {
 ```
 
 > [!NOTE]
-> The IR sensor hardware is always electrically active (it emits IR continuously at the hardware level â€” that's just how the HW-201 module works). Sensor gating in firmware means the ISR-generated events are acknowledged but not forwarded to LEDs when the system is disarmed. The EXTI interrupt fires regardless; only the action taken in SensorTask changes based on the armed state.
+> The IR sensor hardware is always electrically active (it emits IR continuously at the hardware level : that's just how the HW-201 module works). Sensor gating in firmware means the ISR-generated events are acknowledged but not forwarded to LEDs when the system is disarmed. The EXTI interrupt fires regardless; only the action taken in SensorTask changes based on the armed state.
 
 ---
 
@@ -570,11 +457,11 @@ void SensorTask(void *pvParameters) {
 | Queue | xRXQueue, 64 bytes depth, 1 byte per slot |
 | Line parsing | Assembled in TerminalTask on `\r`/`\n` |
 | Command dispatch | `parse_command()` in TerminalTask |
-| Hardware control | Via xLEDQueue and xSensorQueue â€” no direct peripheral access |
-| Sensor activation | Gated â€” requires `sensor start` command, off by default |
+| Hardware control | Via xLEDQueue and xSensorQueue : no direct peripheral access |
+| Sensor activation | Gated : requires `sensor start` command, off by default |
 | Terminal software | Tera Term v5.6.1 (recommended), PuTTY, VS Code Serial Monitor |
 
-The CLI transforms the embedded system from a silent, monolithic device into an interactive instrument â€” one you can interrogate, command, and observe in real time over a standard serial connection.
+The CLI transforms the embedded system from a silent, monolithic device into an interactive instrument : one you can interrogate, command, and observe in real time over a standard serial connection.
 
 ---
 

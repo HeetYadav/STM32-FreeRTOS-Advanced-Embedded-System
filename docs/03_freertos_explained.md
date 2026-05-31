@@ -27,10 +27,10 @@ Before choosing FreeRTOS, it helps to understand the spectrum of firmware design
 
 #### Paradigm 1: Polling (Super-Loop)
 
-The simplest possible firmware â€” an infinite loop that checks everything sequentially.
+The simplest possible firmware : an infinite loop that checks everything sequentially.
 
 ```c
-// Bare-metal super-loop â€” simple, predictable, but fundamentally limited
+// Bare-metal super-loop : simple, predictable, but fundamentally limited
 int main(void) {
     HAL_Init();
     SystemClock_Config();
@@ -40,7 +40,7 @@ int main(void) {
         update_leds();                            // update LEDs
         read_ultrasonic();                        // trigger + wait for echo
         send_uart_response();                     // transmit any pending output
-        // repeat â€” forever
+        // repeat : forever
     }
 }
 ```
@@ -52,7 +52,7 @@ int main(void) {
 | `read_ultrasonic()` blocks for ~23ms waiting for echo | During that wait, nothing else runs |
 | LED update timing depends on how long button handling took | Non-deterministic jitter |
 | Adding a new feature means re-tuning every timing loop | Maintenance nightmare |
-| No concept of "priority" â€” button presses and LED updates are equals | Critical events can be starved |
+| No concept of "priority" : button presses and LED updates are equals | Critical events can be starved |
 
 > [!WARNING]
 > The HC-SR04 ultrasonic sensor requires a 10Âµs trigger pulse followed by waiting up to **38ms** for an echo. In a polling loop, the entire system halts during this wait. This is fatal for anything else that needs timely service.
@@ -61,7 +61,7 @@ int main(void) {
 
 #### Paradigm 2: Interrupt-Driven
 
-Better â€” hardware events fire ISRs that preempt the main loop. But state machines become complex, and ISRs share global state in dangerous ways.
+Better : hardware events fire ISRs that preempt the main loop. But state machines become complex, and ISRs share global state in dangerous ways.
 
 ```c
 volatile uint8_t echo_done = 0;
@@ -96,7 +96,7 @@ while (1) {
 
 #### Paradigm 3: RTOS (Our Approach)
 
-Each concern gets its own **task** â€” an independent execution context with its own stack. The RTOS kernel schedules them cooperatively/preemptively and provides safe communication primitives (queues, semaphores, mutexes).
+Each concern gets its own **task** : an independent execution context with its own stack. The RTOS kernel schedules them cooperatively/preemptively and provides safe communication primitives (queues, semaphores, mutexes).
 
 ```
 â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
@@ -107,7 +107,7 @@ Each concern gets its own **task** â€” an independent execution context wit
 â”‚              â”‚              â”‚  (HIGHEST)   â”‚               â”‚
 â”‚ Blinks PA5   â”‚ Parses CLI   â”‚ HC-SR04 + IR â”‚ PWM fading    â”‚
 â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                              â–²
+                              â:²
                          ISRs post to queues
                     (EXTI, USART, timers) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
@@ -123,7 +123,7 @@ Each concern gets its own **task** â€” an independent execution context wit
 | Deterministic timing | Only with careful tuning | Guaranteed by scheduler |
 
 > [!NOTE]
-> RTOS adds overhead: ~5â€“10KB of Flash for the kernel, ~500 bytes of RAM per task stack. On our STM32L476RG (1MB Flash, 96KB RAM), this overhead is entirely acceptable. The engineering trade-off is overwhelmingly positive.
+> RTOS adds overhead: ~5:10KB of Flash for the kernel, ~500 bytes of RAM per task stack. On our STM32L476RG (1MB Flash, 96KB RAM), this overhead is entirely acceptable. The engineering trade-off is overwhelmingly positive.
 
 ---
 
@@ -131,7 +131,7 @@ Each concern gets its own **task** â€” an independent execution context wit
 
 ### Task
 
-A task is a C function that runs in an **infinite loop** and never returns. Each task has its own **stack** â€” a private region of RAM used for local variables, function call frames, and CPU register saves. When the kernel switches between tasks (a **context switch**), it saves the current CPU register state onto the current task's stack and restores the next task's saved state.
+A task is a C function that runs in an **infinite loop** and never returns. Each task has its own **stack** : a private region of RAM used for local variables, function call frames, and CPU register saves. When the kernel switches between tasks (a **context switch**), it saves the current CPU register state onto the current task's stack and restores the next task's saved state.
 
 ```c
 // Every FreeRTOS task has this signature
@@ -139,24 +139,24 @@ void vMyTask(void *pvParameters) {
     // One-time initialization goes here (before the loop)
     for (;;) {
         // The task's work goes here
-        // MUST call a blocking API eventually â€” never spin-wait!
+        // MUST call a blocking API eventually : never spin-wait!
         vTaskDelay(pdMS_TO_TICKS(1000)); // sleep 1 second
     }
-    // Never reaches here â€” tasks must not return
+    // Never reaches here : tasks must not return
     vTaskDelete(NULL); // defensive: delete self if somehow reached
 }
 ```
 
 ### Scheduler
 
-The FreeRTOS scheduler runs on the **SysTick** timer interrupt (every 1ms by default, configurable via `configTICK_RATE_HZ`). On every tick, the scheduler checks whether a higher-priority task has become ready to run. If yes â€” preemption. The current task's context is saved; the higher-priority task resumes.
+The FreeRTOS scheduler runs on the **SysTick** timer interrupt (every 1ms by default, configurable via `configTICK_RATE_HZ`). On every tick, the scheduler checks whether a higher-priority task has become ready to run. If yes : preemption. The current task's context is saved; the higher-priority task resumes.
 
 > [!IMPORTANT]
 > FreeRTOS on STM32 uses **preemptive scheduling with time-slicing**. A higher-priority task *always* preempts a lower-priority one immediately. Equal-priority tasks share CPU in round-robin slices of one tick (1ms).
 
 ### Queue
 
-A queue is a **thread-safe FIFO buffer** for passing data between tasks (or from ISRs to tasks). It is the primary communication primitive. No shared globals, no `volatile`, no manual critical sections needed â€” the queue handles all that internally.
+A queue is a **thread-safe FIFO buffer** for passing data between tasks (or from ISRs to tasks). It is the primary communication primitive. No shared globals, no `volatile`, no manual critical sections needed : the queue handles all that internally.
 
 ```c
 // Create: 10 slots, each holding one uint32_t value
@@ -180,7 +180,7 @@ Every task has a numeric priority. **Higher number = higher priority**. FreeRTOS
 
 ### Preemption
 
-When a task unblocks (e.g., because a queue message arrived) and its priority is higher than the currently running task, the scheduler immediately suspends the running task and switches to the newly ready task â€” **within the same 1ms tick**. This is what makes RTOS "real-time."
+When a task unblocks (e.g., because a queue message arrived) and its priority is higher than the currently running task, the scheduler immediately suspends the running task and switches to the newly ready task : **within the same 1ms tick**. This is what makes RTOS "real-time."
 
 ### Stack
 
@@ -189,10 +189,10 @@ Each task's stack is a statically or dynamically allocated block of RAM. It hold
 - Return addresses for nested function calls
 - Saved CPU registers during context switches
 
-Stack overflow is silent and catastrophic â€” it corrupts adjacent memory. FreeRTOS provides `configCHECK_FOR_STACK_OVERFLOW` hooks to catch this during development.
+Stack overflow is silent and catastrophic : it corrupts adjacent memory. FreeRTOS provides `configCHECK_FOR_STACK_OVERFLOW` hooks to catch this during development.
 
 > [!WARNING]
-> Stack sizes are specified in **words** (4 bytes each on ARM Cortex-M4), not bytes. A stack of `128` words = 512 bytes. Allocate generously for tasks that call `printf`, `sprintf`, or HAL functions â€” these use significant stack depth.
+> Stack sizes are specified in **words** (4 bytes each on ARM Cortex-M4), not bytes. A stack of `128` words = 512 bytes. Allocate generously for tasks that call `printf`, `sprintf`, or HAL functions : these use significant stack depth.
 
 ---
 
@@ -210,7 +210,7 @@ Here is the complete task registry for `FreeRTOS_App_L476`:
 
 ---
 
-### HeartbeatTask â€” Priority 1
+### HeartbeatTask : Priority 1
 
 **Purpose**: The simplest possible sanity check. Toggles the onboard green LED on PA5 every 1 second. As long as this LED is blinking, the scheduler is running and the system has not crashed.
 
@@ -218,18 +218,18 @@ Here is the complete task registry for `FreeRTOS_App_L476`:
 void HeartbeatTask(void *pvParameters) {
     for (;;) {
         HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);  // toggle onboard LED (PA5)
-        vTaskDelay(pdMS_TO_TICKS(1000));         // sleep 1000ms â€” yields CPU to everyone else
+        vTaskDelay(pdMS_TO_TICKS(1000));         // sleep 1000ms : yields CPU to everyone else
     }
 }
 ```
 
-**Why priority 1?** The heartbeat is purely cosmetic. It must never starve any real-time task. At priority 1 (lowest), it only runs when every other task is blocked â€” which is exactly right. If the heartbeat *stops blinking*, it means something higher-priority is stuck in an infinite loop without yielding.
+**Why priority 1?** The heartbeat is purely cosmetic. It must never starve any real-time task. At priority 1 (lowest), it only runs when every other task is blocked : which is exactly right. If the heartbeat *stops blinking*, it means something higher-priority is stuck in an infinite loop without yielding.
 
-**Stack: 128 words** â€” This task calls no library functions and uses no local variables. 128 words (512 bytes) is conservative and safe.
+**Stack: 128 words** : This task calls no library functions and uses no local variables. 128 words (512 bytes) is conservative and safe.
 
 ---
 
-### ButtonMonitorTask â€” Priority 3
+### ButtonMonitorTask : Priority 3
 
 **Purpose**: Polls both buttons every 50ms. PC13 (onboard blue button) triggers the LED cascade pattern. PB10 (external breadboard button) triggers the LED flash pattern.
 
@@ -261,11 +261,11 @@ void ButtonMonitorTask(void *pvParameters) {
 
 **Why priority 3?** Button presses are user-initiated and need sub-100ms response (feels "instant" to a human). Priority 3 puts this above Terminal (2) and Heartbeat (1) but below Sensor (4). A button press interrupting a CLI parse is fine; a sensor echo timing window being interrupted by a button poll is not.
 
-**Stack: 256 words** â€” Reads two GPIO pins, maintains two local state variables, calls `xQueueSend`. Modest stack usage; 256 words is safe with margin.
+**Stack: 256 words** : Reads two GPIO pins, maintains two local state variables, calls `xQueueSend`. Modest stack usage; 256 words is safe with margin.
 
 ---
 
-### TerminalTask â€” Priority 2
+### TerminalTask : Priority 2
 
 **Purpose**: Implements the serial CLI. Receives bytes from `xRXQueue` (posted by the USART1 ISR), assembles them into a line buffer until `\r` or `\n`, then parses and dispatches commands.
 
@@ -279,7 +279,7 @@ void TerminalTask(void *pvParameters) {
     HAL_UART_Transmit(&huart1, (uint8_t*)"\r\n> ", 4, HAL_MAX_DELAY);
 
     for (;;) {
-        // Block here â€” wake up only when a byte is available in the queue
+        // Block here : wake up only when a byte is available in the queue
         if (xQueueReceive(xRXQueue, &byte, portMAX_DELAY) == pdTRUE) {
             if (byte == '\r' || byte == '\n') {
                 line_buf[pos] = '\0';    // null-terminate
@@ -295,11 +295,11 @@ void TerminalTask(void *pvParameters) {
 
 **Why priority 2?** The terminal is interactive but not time-critical. A 10ms latency in CLI echo is imperceptible to the user. Priority 2 keeps it above the heartbeat (cosmetic) but below ButtonMonitor and SensorTask.
 
-**Stack: 512 words** â€” `parse_command()` calls `HAL_UART_Transmit()`, `sprintf()`, and potentially several layers of helper functions. These library functions consume significant stack. 512 words (2KB) provides safe headroom.
+**Stack: 512 words** : `parse_command()` calls `HAL_UART_Transmit()`, `sprintf()`, and potentially several layers of helper functions. These library functions consume significant stack. 512 words (2KB) provides safe headroom.
 
 ---
 
-### SensorTask â€” Priority 4 (Highest)
+### SensorTask : Priority 4 (Highest)
 
 **Purpose**: The core sensing loop. Every 500ms, fires the HC-SR04 trigger pulse. Listens on `xSensorQueue` for echo measurements posted by the EXTI ISR. Converts time-of-flight to distance, maps distance to an LED level, and posts to `xLEDQueue`. Also handles IR override.
 
@@ -330,20 +330,20 @@ void SensorTask(void *pvParameters) {
 }
 ```
 
-**Why priority 4?** The HC-SR04 echo window is time-critical â€” if the ISR posts to `xSensorQueue` and SensorTask does not wake up promptly, the timing data is still valid (it was captured in the ISR), but any downstream processing delay adds to end-to-end latency. Giving SensorTask the highest priority ensures it immediately preempts everything else when new sensor data arrives.
+**Why priority 4?** The HC-SR04 echo window is time-critical : if the ISR posts to `xSensorQueue` and SensorTask does not wake up promptly, the timing data is still valid (it was captured in the ISR), but any downstream processing delay adds to end-to-end latency. Giving SensorTask the highest priority ensures it immediately preempts everything else when new sensor data arrives.
 
-**Stack: 512 words** â€” Calls distance calculation helpers, `sprintf` for debug output, and multiple queue operations. 512 words provides comfortable margin.
+**Stack: 512 words** : Calls distance calculation helpers, `sprintf` for debug output, and multiple queue operations. 512 words provides comfortable margin.
 
 ---
 
-### LEDControllerTask â€” Priority 2
+### LEDControllerTask : Priority 2
 
 **Purpose**: Consumes messages from `xLEDQueue` and translates them into PWM duty cycles across the four LEDs (TIM1_CH1, TIM2_CH2, TIM3_CH1, TIM3_CH2). Handles smooth fading, cascade patterns, flash sequences, and the IR override (highest LED priority).
 
 ```c
 void LEDControllerTask(void *pvParameters) {
     uint32_t cmd;
-    uint8_t ir_active = 0;  // IR override flag â€” IR beats everything else
+    uint8_t ir_active = 0;  // IR override flag : IR beats everything else
 
     for (;;) {
         // Block until a LED command arrives
@@ -364,7 +364,7 @@ void LEDControllerTask(void *pvParameters) {
                     if (!ir_active) run_flash_pattern();
                     break;
                 default:
-                    if (!ir_active) set_led_level(cmd); // ultrasonic distance level 0â€“4
+                    if (!ir_active) set_led_level(cmd); // ultrasonic distance level 0:4
                     break;
             }
         }
@@ -374,15 +374,15 @@ void LEDControllerTask(void *pvParameters) {
 
 **Why priority 2?** LED control is downstream of sensing (priority 4) and button presses (priority 3). It should react quickly to commands but does not need to preempt sensors or buttons.
 
-**Stack: 512 words** â€” Runs PWM fade loops with `vTaskDelay()`, calls HAL TIM functions, and maintains IR override state. Ample stack is important here.
+**Stack: 512 words** : Runs PWM fade loops with `vTaskDelay()`, calls HAL TIM functions, and maintains IR override state. Ample stack is important here.
 
 ---
 
 ## 4. The Three Queues
 
-Queues are the backbone of inter-task communication. No task shares global state directly â€” all data flows through queues.
+Queues are the backbone of inter-task communication. No task shares global state directly : all data flows through queues.
 
-### xRXQueue â€” UART Receive Buffer
+### xRXQueue : UART Receive Buffer
 
 | Property | Value |
 |---|---|
@@ -405,7 +405,7 @@ USART1_IRQHandler â†’ xQueueSendFromISR â†’ xRXQueue [s][e][n][s][o][r
 
 ---
 
-### xSensorQueue â€” Sensor Event Messages
+### xSensorQueue : Sensor Event Messages
 
 | Property | Value |
 |---|---|
@@ -417,7 +417,7 @@ USART1_IRQHandler â†’ xQueueSendFromISR â†’ xRXQueue [s][e][n][s][o][r
 **Purpose**: Carries typed sensor events from the EXTI ISR to SensorTask.
 
 ```c
-// Message structure â€” carries both sensor types through one queue
+// Message structure : carries both sensor types through one queue
 typedef struct {
     uint8_t  type;   // SENSOR_ULTRASONIC or SENSOR_IR
     uint32_t value;  // echo duration in Âµs (ultrasonic), or 0/1 (IR detect/clear)
@@ -428,7 +428,7 @@ typedef struct {
 
 ---
 
-### xLEDQueue â€” LED Command Channel
+### xLEDQueue : LED Command Channel
 
 | Property | Value |
 |---|---|
@@ -437,7 +437,7 @@ typedef struct {
 | Producers | `SensorTask`, `TerminalTask`, `ButtonMonitorTask` |
 | Consumer | `LEDControllerTask` |
 
-**Purpose**: Any task that wants to change LED behavior posts a command word to this queue. `LEDControllerTask` is the sole consumer and sole owner of the PWM timers â€” no other task touches the LED hardware directly. This enforces **single ownership** of hardware peripherals.
+**Purpose**: Any task that wants to change LED behavior posts a command word to this queue. `LEDControllerTask` is the sole consumer and sole owner of the PWM timers : no other task touches the LED hardware directly. This enforces **single ownership** of hardware peripherals.
 
 ```c
 // Command word definitions
@@ -445,7 +445,7 @@ typedef struct {
 #define LED_CMD_FLASH     0xA002  // blink all LEDs 5x at 100%
 #define LED_CMD_IR_ON     0xA003  // IR obstacle detected: all LEDs blink at 100%
 #define LED_CMD_IR_OFF    0xA004  // IR cleared: return to ultrasonic distance mode
-// Values 0â€“4: ultrasonic distance level (0=all off, 4=all on at 100%)
+// Values 0:4: ultrasonic distance level (0=all off, 4=all on at 100%)
 ```
 
 > [!TIP]
@@ -459,7 +459,7 @@ typedef struct {
 
 FreeRTOS queue and semaphore operations involve taking a scheduler lock, potentially blocking the caller, and possibly triggering a context switch. **None of these are safe from inside an ISR.**
 
-An ISR runs at a hardware interrupt priority level â€” it has already preempted the scheduler's own data structures mid-operation. Calling `xQueueSend()` from an ISR risks corrupting the kernel's internal linked lists.
+An ISR runs at a hardware interrupt priority level : it has already preempted the scheduler's own data structures mid-operation. Calling `xQueueSend()` from an ISR risks corrupting the kernel's internal linked lists.
 
 > [!CAUTION]
 > Never call `xQueueSend()`, `xSemaphoreGive()`, or any non-`FromISR` FreeRTOS API from an interrupt handler. The result is undefined behavior that typically manifests as a hard fault or silent data corruption.
@@ -469,11 +469,11 @@ An ISR runs at a hardware interrupt priority level â€” it has already preem
 FreeRTOS provides ISR-safe versions of all communication APIs. They:
 1. Use a different internal locking mechanism compatible with interrupt context
 2. Accept a `pxHigherPriorityTaskWoken` output parameter
-3. **Never block** â€” they return immediately whether the operation succeeded or not
+3. **Never block** : they return immediately whether the operation succeeded or not
 
-### portYIELD_FROM_ISR â€” Triggering Immediate Preemption
+### portYIELD_FROM_ISR : Triggering Immediate Preemption
 
-When an ISR posts a message to a queue that was previously empty, a waiting task may have just become ready to run. If that task has higher priority than the interrupted task, we want the context switch to happen **immediately** when the ISR returns â€” not at the next scheduler tick 1ms later.
+When an ISR posts a message to a queue that was previously empty, a waiting task may have just become ready to run. If that task has higher priority than the interrupted task, we want the context switch to happen **immediately** when the ISR returns : not at the next scheduler tick 1ms later.
 
 ```c
 // From our EXTI9_5_IRQHandler in FreeRTOS_App_L476
@@ -483,17 +483,17 @@ void EXTI9_5_IRQHandler(void) {
     // --- Handle PB6 (HC-SR04 Echo) ---
     if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_6)) {
         if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6) == GPIO_PIN_SET) {
-            // Rising edge: echo started â€” reset our 1Âµs stopwatch
+            // Rising edge: echo started : reset our 1Âµs stopwatch
             TIM5->CNT = 0;
             TIM5->CR1 |= TIM_CR1_CEN;  // start TIM5 counting at 1MHz
         } else {
-            // Falling edge: echo ended â€” read elapsed time
-            TIM5->CR1 &= ~TIM_CR1_CEN; // stop TIM5 â€” freeze the count
+            // Falling edge: echo ended : read elapsed time
+            TIM5->CR1 &= ~TIM_CR1_CEN; // stop TIM5 : freeze the count
             SensorMessage_t msg;
             msg.type  = SENSOR_ULTRASONIC;
             msg.value = TIM5->CNT;      // CNT ticks = Âµs (TIM5 at 1MHz)
 
-            // ISR-safe send â€” never blocks, sets xHigherPriorityTaskWoken if needed
+            // ISR-safe send : never blocks, sets xHigherPriorityTaskWoken if needed
             xQueueSendFromISR(xSensorQueue, &msg, &xHigherPriorityTaskWoken);
         }
         __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_6); // MUST clear pending bit or ISR re-fires endlessly
@@ -511,7 +511,7 @@ void EXTI9_5_IRQHandler(void) {
     }
 
     // If posting woke a higher-priority task, request immediate context switch
-    // This sets PendSV pending â€” fires after all ISRs complete
+    // This sets PendSV pending : fires after all ISRs complete
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 ```
@@ -527,11 +527,11 @@ void EXTI9_5_IRQHandler(void) {
 5. portYIELD_FROM_ISR(pdTRUE) sets PendSV interrupt pending
 6. ISR returns â†’ PendSV fires immediately (lowest hardware priority, fires last)
 7. Scheduler context-switches to SensorTask (priority 4, highest ready task)
-8. SensorTask calculates distance, posts LED command â€” all within microseconds
+8. SensorTask calculates distance, posts LED command : all within microseconds
 ```
 
 > [!NOTE]
-> `portYIELD_FROM_ISR` works by setting the **PendSV** interrupt pending. PendSV is configured at the lowest hardware interrupt priority in STM32 FreeRTOS ports, so it fires after the current ISR (and any other pending hardware ISRs) complete â€” but before returning to any task code.
+> `portYIELD_FROM_ISR` works by setting the **PendSV** interrupt pending. PendSV is configured at the lowest hardware interrupt priority in STM32 FreeRTOS ports, so it fires after the current ISR (and any other pending hardware ISRs) complete : but before returning to any task code.
 
 ---
 
@@ -544,28 +544,28 @@ void EXTI9_5_IRQHandler(void) {
 | 4 (Highest) | `SensorTask` | HC-SR04 echo data is time-stamped in ISR; SensorTask must wake immediately to process it |
 | 3 | `ButtonMonitorTask` | User button presses need sub-100ms latency to feel responsive |
 | 2 | `TerminalTask` | CLI response latency of â‰¤50ms is imperceptible to the user |
-| 2 | `LEDControllerTask` | LED visual updates lag by one scheduler tick at worst â€” imperceptible |
-| 1 (Lowest) | `HeartbeatTask` | Purely cosmetic blink â€” runs only during idle time |
+| 2 | `LEDControllerTask` | LED visual updates lag by one scheduler tick at worst : imperceptible |
+| 1 (Lowest) | `HeartbeatTask` | Purely cosmetic blink : runs only during idle time |
 
 ### Why SensorTask Must Be Highest Priority
 
 The HC-SR04's echo duration directly encodes distance. If `SensorTask` does not process the `xSensorQueue` message quickly enough, the *data is still correct* (the ISR captured the time), but:
 
-1. The 500ms sensing cycle gets delayed â€” LED response feels sluggish
+1. The 500ms sensing cycle gets delayed : LED response feels sluggish
 2. If another trigger fires before the first is processed, queue backlog grows
 3. Distance accuracy depends on timely processing feeding timely LED updates
 
-Assigning priority 4 ensures SensorTask preempts everything else the moment sensor data arrives â€” even mid-UART-transmit or mid-button-poll.
+Assigning priority 4 ensures SensorTask preempts everything else the moment sensor data arrives : even mid-UART-transmit or mid-button-poll.
 
 ### Priority Inversion Awareness
 
 In our design, no low-priority task holds a resource that a high-priority task needs. Specifically:
-- `SensorTask` (P4) communicates only through queues â€” it acquires no mutex
+- `SensorTask` (P4) communicates only through queues : it acquires no mutex
 - `LEDControllerTask` (P2) owns the PWM timers exclusively and shares nothing upward
 - This design avoids the classic priority inversion scenario
 
 > [!TIP]
-> If you ever add a shared resource (e.g., a shared I2C bus) accessed from tasks of different priorities, use `xSemaphoreCreateMutex()` (not a binary semaphore). FreeRTOS mutexes implement **priority inheritance** â€” the low-priority holder temporarily inherits the higher-priority requester's priority level, unblocking itself quickly to release the resource.
+> If you ever add a shared resource (e.g., a shared I2C bus) accessed from tasks of different priorities, use `xSemaphoreCreateMutex()` (not a binary semaphore). FreeRTOS mutexes implement **priority inheritance** : the low-priority holder temporarily inherits the higher-priority requester's priority level, unblocking itself quickly to release the resource.
 
 ---
 
@@ -577,13 +577,13 @@ Stack sizing is one of the most common sources of mysterious hard faults in RTOS
 |---|---|---|---|
 | `HeartbeatTask` | 128 | 512 | One toggle call, one delay call, no local vars. ARM Cortex-M4 exception frame = 8 registers. 128w is the recommended minimum. |
 | `ButtonMonitorTask` | 256 | 1024 | Reads two GPIO pins, maintains 2 state vars, one `xQueueSend` call. Moderate depth. |
-| `TerminalTask` | 512 | 2048 | Calls `sprintf()` (consumes ~300â€“500 bytes alone), HAL UART transmit, command parser. Must be generous. |
+| `TerminalTask` | 512 | 2048 | Calls `sprintf()` (consumes ~300:500 bytes alone), HAL UART transmit, command parser. Must be generous. |
 | `SensorTask` | 512 | 2048 | Distance calculation, `sprintf` for debug, queue operations, HAL GPIO. |
 | `LEDControllerTask` | 512 | 2048 | PWM fade loops with nested function calls, HAL TIM operations, pattern sequencing. |
 
 ### The sprintf Rule of Thumb
 
-`sprintf` and `printf` functions maintain an internal working buffer on the stack. On ARM with newlib, a `sprintf` call can consume **300â€“700 bytes** of stack depending on the format string and arguments. Any task that calls `sprintf` (or anything that internally calls it) needs at least 512 words (2KB) of stack.
+`sprintf` and `printf` functions maintain an internal working buffer on the stack. On ARM with newlib, a `sprintf` call can consume **300:700 bytes** of stack depending on the format string and arguments. Any task that calls `sprintf` (or anything that internally calls it) needs at least 512 words (2KB) of stack.
 
 ### Detecting Stack Overflow During Development
 
@@ -596,11 +596,11 @@ Enable stack overflow checking in `FreeRTOSConfig.h`:
 Then implement the hook:
 
 ```c
-// Called by the kernel if a stack overflow is detected â€” never return from here
+// Called by the kernel if a stack overflow is detected : never return from here
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
     (void)pcTaskName;
     __disable_irq();
-    while (1); // halt â€” let the debugger catch it with pcTaskName still on the stack
+    while (1); // halt : let the debugger catch it with pcTaskName still on the stack
 }
 ```
 
@@ -643,13 +643,13 @@ stateDiagram-v2
 
 ### The Idle Task
 
-FreeRTOS automatically creates an **Idle Task** at priority 0 (below all user tasks). It runs whenever all user tasks are Blocked. In our system, this happens frequently â€” most tasks spend the majority of their time blocked on delays or queues. You can hook into the Idle Task for low-power sleep:
+FreeRTOS automatically creates an **Idle Task** at priority 0 (below all user tasks). It runs whenever all user tasks are Blocked. In our system, this happens frequently : most tasks spend the majority of their time blocked on delays or queues. You can hook into the Idle Task for low-power sleep:
 
 ```c
 void vApplicationIdleHook(void) {
     // Called repeatedly while all other tasks are blocked
     // The next SysTick or hardware interrupt will wake the MCU
-    __WFI(); // Wait For Interrupt â€” ARM sleep instruction, cuts active power significantly
+    __WFI(); // Wait For Interrupt : ARM sleep instruction, cuts active power significantly
 }
 ```
 
@@ -666,7 +666,7 @@ void vApplicationIdleHook(void) {
 | Scheduling | Preemptive, 1ms tick (SysTick) |
 | Task count | 5 user tasks + 1 FreeRTOS Idle task |
 | Priority range | 1 (HeartbeatTask) to 4 (SensorTask) |
-| Queues | 3 â€” xRXQueue, xSensorQueue, xLEDQueue |
+| Queues | 3 : xRXQueue, xSensorQueue, xLEDQueue |
 | ISR communication | `xQueueSendFromISR` + `portYIELD_FROM_ISR` |
 | Stack total | ~1,920 words â‰ˆ 7.5KB RAM for task stacks |
 | Hardware peripheral ownership | Only one task ever touches each peripheral |
