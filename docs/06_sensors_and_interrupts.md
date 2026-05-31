@@ -430,6 +430,7 @@ The IR sensor has **higher behavioral priority** than the ultrasonic sensor. Whe
 - All four LEDs immediately blink at 100% duty cycle
 - Ultrasonic distance commands to `xLEDQueue` are ignored by `LEDControllerTask` (the `ir_active` flag suppresses them)
 - This continues until IR reports the obstacle is removed
+<img width="1919" height="1079" alt="Screenshot 2026-05-31 194347" src="https://github.com/user-attachments/assets/4e333ca3-9cc2-44c3-93fa-e3c87d1c9021" />
 
 **Design rationale**: The IR sensor is detecting a close-range, binary event (something is right there or it isn't). This is more urgent and more certain than a slow-updating distance estimate. Giving IR absolute priority provides unambiguous visual feedback.
 
