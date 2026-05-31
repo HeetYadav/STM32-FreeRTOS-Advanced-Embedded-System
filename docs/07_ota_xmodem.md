@@ -1,4 +1,4 @@
-# 07 — OTA Firmware Updates via XMODEM
+# OTA Firmware Updates via XMODEM
 
 > **Document Version**: 1.0 | **Protocol**: XMODEM-CRC | **Terminal**: Tera Term v5.6.1 | **Baud Rate**: 115200 8N1
 
