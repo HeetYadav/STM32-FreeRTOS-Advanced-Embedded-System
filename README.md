@@ -88,8 +88,8 @@ flowchart TD
 
 ## 🔧 Hardware
 
-> 📸 **[Hardware Photo: Full breadboard setup — Nucleo-L476RG, HC-SR04, HW-201, 4x LEDs wired to PWM channels]**
-> *(Contribute a photo via PR!)*
+<img width="3735" height="2555" alt="HardwareSetup" src="https://github.com/user-attachments/assets/b9f799ea-b747-4c4d-8cca-d983820e10dc" />
+
 
 ### Bill of Materials
 
