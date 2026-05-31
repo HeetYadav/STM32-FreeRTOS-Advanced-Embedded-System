@@ -1,0 +1,21 @@
+# Git ignore for STM32 PlatformIO projects
+
+# PlatformIO build output
+.pio/
+.pioenvs/
+
+# VS Code settings
+.vscode/
+
+# Generated hex/elf/bin outputs (firmware.bin is committed only when tagged)
+*.elf
+*.hex
+*.map
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python bytecache
+__pycache__/
+*.pyc
