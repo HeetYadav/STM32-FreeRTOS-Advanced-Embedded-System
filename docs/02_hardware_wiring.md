@@ -46,16 +46,16 @@
 |---|---|---|---|---|---|
 | Trigger pulse | TRIG | **PC7** | GPIOC | MCU  Sensor | 10 s HIGH pulse sent by `SensorTask` every 500 ms |
 | Echo return | ECHO | **PB6** | GPIOB | Sensor  MCU | ** 5V output**: use voltage divider (see Section 3). Captured by EXTI on both edges; timed with TIM5 @ 1 MHz |
-| Power | VCC | **5V (CN7 pin 18)** |: | Board  Sensor | Must be 5V; sensor won't trigger reliably at 3.3V |
-| Ground | GND | **GND (any)** |: |: | Common ground with Nucleo GND |
+| Power | VCC | **5V (CN7 pin 18)** | None | Board  Sensor | Must be 5V; sensor won't trigger reliably at 3.3V |
+| Ground | GND | **GND (any)** | None | None | Common ground with Nucleo GND |
 
 ### HW-201 IR Proximity Sensor
 
 | Signal | HW-201 Pin | MCU Pin | GPIO Port | Direction | Notes |
 |---|---|---|---|---|---|
 | IR output | OUT (D0) | **PA7** | GPIOA | Sensor  MCU | Active LOW: goes LOW when object detected. Triggers EXTI both edges |
-| Power | VCC | **3.3V** |: | Board  Sensor | HW-201 works on 3.3V; uses 3.3V to avoid 5V logic on OUT pin |
-| Ground | GND | **GND (any)** |: |: | Common ground |
+| Power | VCC | **3.3V** | None | Board  Sensor | HW-201 works on 3.3V; uses 3.3V to avoid 5V logic on OUT pin |
+| Ground | GND | **GND (any)** | None | None | Common ground |
 
 > **Sensitivity adjustment**: The HW-201 has a blue potentiometer on board. Turn it clockwise to decrease detection range, counter-clockwise to increase it. Set it to detect objects at ~5:10 cm for best interaction with the ultrasonic cascade.
 
@@ -83,7 +83,7 @@ Each LED cathode connects to GND via a **220  resistor**. The MCU pin drives the
 |---|---|---|---|---|
 | **TX** | **PA9** | GPIOA | MCU  PC | UART1 transmit; connect to RX of USB-Serial adapter or use ST-Link VCP |
 | **RX** | **PA10** | GPIOA | PC  MCU | UART1 receive; interrupt-driven (RXNE flag), bytes posted to `xRXQueue` |
-| **Baud rate** |: |: |: | 115200 baud, 8 data bits, no parity, 1 stop bit (8N1) |
+| **Baud rate** | None | None | None | 115200 baud, 8 data bits, no parity, 1 stop bit (8N1) |
 
 > **Using ST-Link VCP**: The Nucleo board's ST-Link includes a Virtual COM Port that connects to PA2/PA3 by default via solder bridges. If UART1 (PA9/PA10) is preferred (as in this project), connect a USB-Serial adapter externally, or reconfigure the ST-Link solder bridges (SB13/SB14 on the Nucleo board): see the Nucleo-L476RG User Manual UM1724.
 
@@ -339,7 +339,7 @@ This is the single most important hardware caution in this project.
 | HC-SR04 TRIG input | 5V device | Accepts 3.3V HIGH as valid input |  Yes: 3.3V MCU output is recognized as HIGH by 5V sensor |
 | HC-SR04 ECHO output | 5V device | **Outputs 5V HIGH** |  **No: must use voltage divider** |
 | HW-201 OUT | 3.3V supply | Outputs 3.3V HIGH |  Yes: safe at 3.3V |
-| External button | 3.3V pull-up |: |  Yes |
+| External button | 3.3V pull-up | None |  Yes |
 
 **The HC-SR04 TRIG pin is safe to drive directly from the MCU** (3.3V MCU output  5V device input). The 5V HC-SR04 sees 3.3V as a valid HIGH because its input threshold is well below 3.3V.
 

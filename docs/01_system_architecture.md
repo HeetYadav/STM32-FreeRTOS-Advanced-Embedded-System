@@ -252,13 +252,13 @@ The application uses a minimal interrupt footprint: only the IRQs it strictly ne
 
 | IRQ Handler | Pin | Trigger | Action in ISR | Queue Posted |
 |---|---|---|---|---|
-| `EXTI9_5_IRQHandler` | PB6 (HC-SR04 ECHO) | Rising edge | Record `TIM5->CNT` as echo start timestamp |: |
+| `EXTI9_5_IRQHandler` | PB6 (HC-SR04 ECHO) | Rising edge | Record `TIM5->CNT` as echo start timestamp | None |
 | `EXTI9_5_IRQHandler` | PB6 (HC-SR04 ECHO) | Falling edge | Record `TIM5->CNT` as echo end; compute pulse width; post distance | `xSensorQueue` |
 | `EXTI9_5_IRQHandler` | PA7 (HW-201 IR OUT) | Falling edge (active LOW) | Post `IR_OBJECT_DETECTED` command | `xLEDQueue` |
 | `EXTI9_5_IRQHandler` | PA7 (HW-201 IR OUT) | Rising edge (object removed) | Post `IR_OBJECT_REMOVED` command | `xLEDQueue` |
 | `USART1_IRQHandler` | PA10 (UART1 RX) | RXNE (byte received) | Read `UART1->RDR`, post byte to ring buffer | `xRXQueue` |
-| `SysTick_Handler` |: | Every 1ms | FreeRTOS tick increment (`xPortSysTickHandler`) |: (internal) |
-| `TIM5` |: | (not IRQ-driven; polled) | TIM5 free-runs at 1MHz; ISR reads CNT directly in EXTI handler |: |
+| `SysTick_Handler` | None | Every 1ms | FreeRTOS tick increment (`xPortSysTickHandler`) | None (internal) |
+| `TIM5` | None | (not IRQ-driven; polled) | TIM5 free-runs at 1MHz; ISR reads CNT directly in EXTI handler | None |
 
 > [!NOTE]
 > `EXTI9_5_IRQHandler` is shared between pins 5:9 on the STM32. Both PB6 and PA7 fall in this range, so a single handler demultiplexes both sources by reading `EXTI->PR1` to check which pending flag is set.

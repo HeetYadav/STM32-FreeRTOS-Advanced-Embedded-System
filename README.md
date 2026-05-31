@@ -100,8 +100,8 @@ flowchart TD
 | IR Proximity Sensor | HW-201 | Object detection override |
 | LEDs (4) | Standard 5mm (any colour) | PWM-controlled distance indicator bar |
 | Push Button (external) | Tactile SPST | OTA trigger + LED flash command |
-| USB-A to Mini-B cable |: | Power + ST-Link programming |
-| Breadboard + jumper wires |: | Wiring |
+| USB-A to Mini-B cable | None | Power + ST-Link programming |
+| Breadboard + jumper wires | None | Wiring |
 
 ---
 

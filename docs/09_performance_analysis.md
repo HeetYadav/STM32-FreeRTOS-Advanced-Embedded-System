@@ -104,7 +104,7 @@ This is a rough estimate based on task periods and worst-case execution times.
 | FreeRTOS scheduler | Per tick (1ms) | ~5 s | **0.5%** |
 | EXTI ISR (HC-SR04) | Every 500 ms | ~2 s | **< 0.01%** |
 | USART1 ISR | Per character | ~1 s | **< 0.01%** |
-| **Total estimated** |: |: | **< 1%** |
+| **Total estimated** | None | None | **< 1%** |
 
 The CPU is sleeping (in `__WFI` via FreeRTOS Idle Task) for approximately **99% of the time**. This is exactly the correct design for a sensor-driven embedded system.
 

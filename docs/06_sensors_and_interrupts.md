@@ -102,10 +102,10 @@ The STM32L476RG has five general-purpose timers. The choice matters:
 
 | Timer | Bit Width | Available for Stopwatch? | Reason |
 |---|---|---|---|
-| TIM1 | 16-bit |  | Used for LED4 PWM (PA8, TIM1_CH1) |
-| TIM2 | 32-bit |  | Used for LED3 PWM (PB3, TIM2_CH2) : see TIM2 conflict story |
-| TIM3 | 16-bit |  | Used for LED1/LED2 PWM (PB4/PB5, TIM3_CH1/CH2) |
-| TIM4 | 16-bit |  | Available but 16-bit only |
+| TIM1 | 16-bit | No | Used for LED4 PWM (PA8, TIM1_CH1) |
+| TIM2 | 32-bit | No | Used for LED3 PWM (PB3, TIM2_CH2) : see TIM2 conflict story |
+| TIM3 | 16-bit | No | Used for LED1/LED2 PWM (PB4/PB5, TIM3_CH1/CH2) |
+| TIM4 | 16-bit | No | Available but 16-bit only |
 | TIM5 | **32-bit** | Yes | No pin conflicts, 32-bit counter |
 
 **TIM5 wins for two reasons:**
@@ -558,9 +558,9 @@ Object in:  --------------                               ----------------
 
 | Component | Pin | Timer Used | ISR Handler | FreeRTOS Queue |
 |---|---|---|---|---|
-| HC-SR04 TRIG | PC7 | : (GPIO output) | : | : |
+| HC-SR04 TRIG | PC7 | None (GPIO output) | None | None |
 | HC-SR04 ECHO | PB6 | TIM5 (1us stopwatch) | EXTI9_5_IRQHandler | -> xSensorQueue |
-| HW-201 IR OUT | PA7 | : | EXTI9_5_IRQHandler | -> xSensorQueue |
+| HW-201 IR OUT | PA7 | None | EXTI9_5_IRQHandler | -> xSensorQueue |
 
 The design cleanly separates concerns: ISRs capture raw hardware events with minimum overhead (a timer read + a queue post), while SensorTask performs all calculations and dispatches LED commands. No floating-point math, no string formatting, no blocking operations occur inside any ISR.
 
