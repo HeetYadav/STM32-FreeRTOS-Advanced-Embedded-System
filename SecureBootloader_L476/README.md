@@ -107,6 +107,7 @@ CRC MATCH! Jumping to Application...
 ```
 
 ---
+<img width="1919" height="1079" alt="Screenshot 2026-05-31 194216" src="https://github.com/user-attachments/assets/05f6f78a-6c7a-4950-a788-aaffb597e5d6" />
 
 ## Key Source Files
 
