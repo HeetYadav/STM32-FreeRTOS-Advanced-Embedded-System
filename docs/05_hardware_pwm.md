@@ -449,6 +449,7 @@ Result: LED4=ON, LED3=ON, LED2=OFF, LED1=OFF
  8cm: ████▒ (all full except LED1 slightly dim)
  5cm: ████  (all full — maximum brightness)
 ```
+<img width="1678" height="1079" alt="UltrasonicFinal" src="https://github.com/user-attachments/assets/d1dc0e36-4485-4dcb-a26f-73941972d04b" />
 
 > [!TIP]
 > The cascade fill pattern is visually intuitive: it simulates a "level" or "signal bar" that rises as the object approaches. LED4 (physically farthest from the sensor) fills first, creating the impression that the "signal" grows from back to front as the object gets closer.
