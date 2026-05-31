@@ -1,4 +1,4 @@
-Secure Bootloader
+# Secure Bootloader
 
 > **Document Version**: 1.0 | **Target MCU**: STM32L476RG | **Flash Tool**: OpenOCD via PlatformIO
 
