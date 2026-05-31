@@ -1,4 +1,4 @@
-﻿# 08 CLI Terminal: The Serial Command Interface
+﻿# CLI Terminal: The Serial Command Interface
 
 > **Navigation**: [â† 07 Button & GPIO](07_button_gpio.md) | [Home](../README.md) | [09 Debugging Guide â†’](09_debugging.md)
 
