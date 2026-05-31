@@ -38,7 +38,7 @@ RTOS fundamentals from scratch, all 5 tasks with priority/stack/blocking analysi
 AppHeader struct, CRC32 hardware verification algorithm, Python CRC injection script, VTOR + MSP jump mechanism, force-update via PB10.
 
 ### [05: Hardware PWM](05_hardware_pwm.md)
-PWM fundamentals, TIM1/TIM2/TIM3 configuration, alternate function routing, LED cascade distance math (30cm→5cm), CCR register writes.
+PWM fundamentals, TIM1/TIM2/TIM3 configuration, alternate function routing, LED cascade distance math (30cm5cm), CCR register writes.
 
 ### [06: Sensors & Interrupts](06_sensors_and_interrupts.md)
 HC-SR04 physics, TIM5 microsecond stopwatch, EXTI shadow register bug, HW-201 IR detection, dual-edge interrupt design.

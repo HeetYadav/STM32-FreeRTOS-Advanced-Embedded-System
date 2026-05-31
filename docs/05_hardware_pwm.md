@@ -11,7 +11,7 @@
 3. [STM32 Timer Architecture](#3-stm32-timer-architecture)
 4. [Timer Configuration Table](#4-timer-configuration-table)
 5. [Why 1 kHz PWM Frequency?](#5-why-1-khz-pwm-frequency)
-6. [🐛 The TIM2 Conflict Bug](#6--the-tim2-conflict-bug)
+6. [ The TIM2 Conflict Bug](#6--the-tim2-conflict-bug)
 7. [MX_PWM_Init Walkthrough](#7-mx_pwm_init-walkthrough)
 8. [SetLEDs() Function Explained](#8-setleds-function-explained)
 9. [Distance Fading Math](#9-distance-fading-math)
@@ -24,7 +24,7 @@
 **Pulse Width Modulation (PWM)** is a technique for controlling the *average power* delivered to a load by rapidly switching a digital output ON and OFF. The CPU doesn't output an analog voltage: it outputs a square wave. The ratio of time spent HIGH to the total period is called the **duty cycle**, and it determines how bright an LED appears, how fast a motor spins, or how loud a buzzer sounds.
 
 ```
-Duty Cycle = (Time HIGH / Period) × 100%
+Duty Cycle = (Time HIGH / Period)  100%
 ```
 
 Here's how different duty cycles look as waveforms:
@@ -35,19 +35,19 @@ _________________________________________________________
                                                         
 
 25%: ON for 1/4 of each period
-‾‾‾‾‾_______________‾‾‾‾‾_______________‾‾‾‾‾___________
+_________________________________________
  ON  |     OFF      | ON  |     OFF      | ON  |
 
 50%: ON for half of each period (half brightness)
-‾‾‾‾‾‾‾‾‾‾__________‾‾‾‾‾‾‾‾‾‾__________‾‾‾‾‾‾‾‾‾‾______
+__________________________
    ON      |  OFF   |   ON      |  OFF   |   ON
 
 75%: ON for 3/4 of each period (bright)
-‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾____‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾____‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾___
+___________
       ON         |OF|      ON         |OF|      ON
 
 100%: Always ON
-‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
 ```
 
 Because LEDs respond to average current, and human eyes have persistence of vision, a 50% duty cycle at 1 kHz looks like a LED at half brightness: even though it is technically blinking 1,000 times per second, far too fast to perceive.
@@ -62,7 +62,7 @@ Because LEDs respond to average current, and human eyes have persistence of visi
 Software PWM means your CPU manually toggles a GPIO pin in a loop or timer ISR:
 
 ```c
-// ❌ Software PWM: do NOT do this in a real-time system
+//  Software PWM: do NOT do this in a real-time system
 while (1) {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);    // LED ON
     delay_us(750);  // 75% duty cycle high time
@@ -84,7 +84,7 @@ This approach has fatal problems in an RTOS environment:
 **Hardware PWM** offloads all waveform generation to a dedicated timer peripheral:
 
 ```c
-// ✅ Hardware PWM: the timer does everything after this one call
+//  Hardware PWM: the timer does everything after this one call
 __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 750);  // 75% duty cycle, set and forget
 ```
 
@@ -98,30 +98,30 @@ The STM32L476 has 11 timers. Three types matter for this project:
 
 ```
 STM32L476RG Timer Hierarchy
-│
-├── TIM1  (Advanced Control Timer)
-│     • APB2 bus (up to 80 MHz after x2 multiplier)
-│     • 16-bit, complementary outputs with dead-time insertion
-│     • Channels: CH1=PA8, CH1N=PA7, CH2=PA9, CH3=PA10, CH4=PA11
-│     • We use: CH1 → PA8 → LED4 (farthest)
-│
-├── TIM2  (General Purpose, 32-bit)
-│     • APB1 bus (up to 80 MHz after x2 multiplier)
-│     • 32-bit counter: unique among GP timers, ideal for long timing intervals
-│     • Channels: CH1=PA0, CH2=PB3, CH3=PA2, CH4=PA3
-│     • We use: CH2 → PB3 → LED3 PWM
-│     • ⚠️ Originally used for ultrasonic timing: caused a conflict (see §6)
-│
-├── TIM3  (General Purpose, 16-bit)
-│     • APB1 bus (up to 80 MHz after x2 multiplier)
-│     • Channels: CH1=PB4, CH2=PB5, CH3=PB0, CH4=PB1
-│     • We use: CH1 → PB4 → LED1 (nearest), CH2 → PB5 → LED2
-│
-└── TIM5  (General Purpose, 32-bit)
-      • APB1 bus
-      • Repurposed as 1 MHz microsecond stopwatch for HC-SR04 echo timing
-      • No PWM channels used: purely counter mode
-      • No GPIO conflict with LED pins
+
+ TIM1  (Advanced Control Timer)
+      APB2 bus (up to 80 MHz after x2 multiplier)
+      16-bit, complementary outputs with dead-time insertion
+      Channels: CH1=PA8, CH1N=PA7, CH2=PA9, CH3=PA10, CH4=PA11
+      We use: CH1  PA8  LED4 (farthest)
+
+ TIM2  (General Purpose, 32-bit)
+      APB1 bus (up to 80 MHz after x2 multiplier)
+      32-bit counter: unique among GP timers, ideal for long timing intervals
+      Channels: CH1=PA0, CH2=PB3, CH3=PA2, CH4=PA3
+      We use: CH2  PB3  LED3 PWM
+       Originally used for ultrasonic timing: caused a conflict (see 6)
+
+ TIM3  (General Purpose, 16-bit)
+      APB1 bus (up to 80 MHz after x2 multiplier)
+      Channels: CH1=PB4, CH2=PB5, CH3=PB0, CH4=PB1
+      We use: CH1  PB4  LED1 (nearest), CH2  PB5  LED2
+
+ TIM5  (General Purpose, 32-bit)
+       APB1 bus
+       Repurposed as 1 MHz microsecond stopwatch for HC-SR04 echo timing
+       No PWM channels used: purely counter mode
+       No GPIO conflict with LED pins
 ```
 
 **Alternate Function (AF) Pin Mapping** is the mechanism that connects a timer channel to a physical GPIO pin. On STM32, every pin has multiple possible functions; you configure which one you want via the GPIO Alternate Function registers:
@@ -151,10 +151,10 @@ All four PWM channels are configured identically for simplicity: 1 kHz output fr
 
 ```
 Timer Clock = 80 MHz (both APB buses run at 80 MHz on this config)
-Prescaler   = 79   → Timer ticks at 80,000,000 / (79+1) = 1,000,000 Hz = 1 MHz
-ARR         = 1000 → Timer resets every 1000 ticks → Period = 1000 / 1,000,000 = 1 ms
+Prescaler   = 79    Timer ticks at 80,000,000 / (79+1) = 1,000,000 Hz = 1 MHz
+ARR         = 1000  Timer resets every 1000 ticks  Period = 1000 / 1,000,000 = 1 ms
 PWM Freq    = 1 / 1ms = 1000 Hz = 1 kHz
-CCR=500     → 500/1000 = 50% duty cycle → half brightness
+CCR=500      500/1000 = 50% duty cycle  half brightness
 ```
 
 > [!TIP]
@@ -176,15 +176,15 @@ Components on PCBs (capacitors, inductors, even LED driver circuits) can resonat
 
 **Our choice: 1 kHz:**
 
-- ✅ Well above 60 Hz flicker threshold: no visible flicker
-- ✅ No inductive loads in our circuit: no audible noise concern
-- ✅ Simple math: prescaler=79, ARR=1000 gives exactly 1 kHz with a 1 MHz timer clock
-- ✅ CCR range 0:1000 gives convenient 0.1% resolution
-- ✅ Timer counts to 1000 in 1 ms: same order of magnitude as FreeRTOS 1 ms tick
+-  Well above 60 Hz flicker threshold: no visible flicker
+-  No inductive loads in our circuit: no audible noise concern
+-  Simple math: prescaler=79, ARR=1000 gives exactly 1 kHz with a 1 MHz timer clock
+-  CCR range 0:1000 gives convenient 0.1% resolution
+-  Timer counts to 1000 in 1 ms: same order of magnitude as FreeRTOS 1 ms tick
 
 ---
 
-## 6. 🐛 The TIM2 Conflict Bug
+## 6.  The TIM2 Conflict Bug
 
 ### Symptom
 
@@ -241,12 +241,12 @@ void MX_PWM_Init(void)
 {
     TIM_OC_InitTypeDef sConfigOC = {0};
 
-    /* ── TIM3: LED1 (CH1/PB4) and LED2 (CH2/PB5) ──────────────────────── */
+    /*  TIM3: LED1 (CH1/PB4) and LED2 (CH2/PB5)  */
 
     // Step 1: Initialize the timer base
     // Prescaler=79: 80MHz / (79+1) = 1MHz timer clock
-    // Period=1000:  1MHz / 1001  ≈ 1kHz PWM frequency
-    // CounterMode UP: counts 0→1000 then resets
+    // Period=1000:  1MHz / 1001   1kHz PWM frequency
+    // CounterMode UP: counts 01000 then resets
     htim3.Instance               = TIM3;
     htim3.Init.Prescaler         = 79;
     htim3.Init.CounterMode       = TIM_COUNTERMODE_UP;
@@ -265,8 +265,8 @@ void MX_PWM_Init(void)
     sConfigOC.OCPolarity   = TIM_OCPOLARITY_HIGH;  // Active HIGH: LED anode to 3.3V
     sConfigOC.OCFastMode   = TIM_OCFAST_DISABLE;
 
-    HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1);  // PB4 → LED1
-    HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2);  // PB5 → LED2
+    HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1);  // PB4  LED1
+    HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2);  // PB5  LED2
     // Note: same sConfigOC used for both channels: both start at 0%
 
     // Step 3: Start PWM output on the GPIO pin
@@ -275,7 +275,7 @@ void MX_PWM_Init(void)
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
 
-    /* ── TIM2: LED3 (CH2/PB3) ──────────────────────────────────────────── */
+    /*  TIM2: LED3 (CH2/PB3)  */
     htim2.Instance               = TIM2;     // 32-bit GP timer: same config as TIM3
     htim2.Init.Prescaler         = 79;
     htim2.Init.CounterMode       = TIM_COUNTERMODE_UP;
@@ -285,10 +285,10 @@ void MX_PWM_Init(void)
     HAL_TIM_PWM_Init(&htim2);
 
     sConfigOC.Pulse = 0;
-    HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2);  // PB3 → LED3
+    HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2);  // PB3  LED3
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 
-    /* ── TIM1: LED4 (CH1/PA8) ──────────────────────────────────────────── */
+    /*  TIM1: LED4 (CH1/PA8)  */
     // TIM1 is an Advanced Control Timer: requires one extra step:
     // HAL_TIMEx_PWMN_Start() or enabling the main output (MOE bit in BDTR register)
     // HAL_TIM_PWM_Start() handles this automatically for CH1 on TIM1.
@@ -302,7 +302,7 @@ void MX_PWM_Init(void)
     HAL_TIM_PWM_Init(&htim1);
 
     sConfigOC.Pulse = 0;
-    HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1);  // PA8 → LED4
+    HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1);  // PA8  LED4
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
     // For TIM1, HAL also sets MOE (Main Output Enable) in BDTR: required for
     // advanced timers to actually drive the pin. General purpose timers don't need this.
@@ -311,7 +311,7 @@ void MX_PWM_Init(void)
 
 **Why order matters:**
 
-`HAL_TIM_PWM_Init()` → `HAL_TIM_PWM_ConfigChannel()` → `HAL_TIM_PWM_Start()`
+`HAL_TIM_PWM_Init()`  `HAL_TIM_PWM_ConfigChannel()`  `HAL_TIM_PWM_Start()`
 
 - `Init` configures the timer base (prescaler, period, counter mode)
 - `ConfigChannel` writes the CCR (capture/compare register) and output mode: requires the timer to already be initialized so the register addresses are valid
@@ -368,9 +368,9 @@ The cascade distance-to-brightness algorithm maps sensor readings to a smooth, s
 ### Range Definition
 
 ```
-Distance > 30 cm   →  All LEDs OFF      (object too far, ignore)
-Distance = 5:30 cm →  Cascade fade      (smooth fill from LED4 → LED1)
-Distance ≤ 5 cm    →  All LEDs at 100%  (maximum brightness, object very close)
+Distance > 30 cm     All LEDs OFF      (object too far, ignore)
+Distance = 5:30 cm   Cascade fade      (smooth fill from LED4  LED1)
+Distance  5 cm      All LEDs at 100%  (maximum brightness, object very close)
 ```
 
 ### The Math
@@ -396,25 +396,25 @@ void update_cascade_leds(float dist_cm)
         return;
     }
 
-    // Map distance 30cm→5cm to progress 0.0→1.0
+    // Map distance 30cm5cm to progress 0.01.0
     // At 30cm: progress=0.0 (all off)
     // At 5cm:  progress=1.0 (all on)
     float progress = (30.0f - dist_cm) / 25.0f;
 
-    // Total PWM budget: 4 LEDs × 1000 max each = 4000 units maximum
+    // Total PWM budget: 4 LEDs  1000 max each = 4000 units maximum
     // Distribute the budget sequentially: LED4 fills first, then LED3, etc.
     float total_pwm = progress * 4000.0f;
 
-    // LED4 fills from 0→1000 as total_pwm goes 0→1000
+    // LED4 fills from 01000 as total_pwm goes 01000
     l4 = (uint32_t)fminf(total_pwm,           1000.0f);
 
-    // LED3 fills from 0→1000 as total_pwm goes 1000→2000
+    // LED3 fills from 01000 as total_pwm goes 10002000
     l3 = (uint32_t)fminf(fmaxf(total_pwm - 1000.0f, 0.0f), 1000.0f);
 
-    // LED2 fills from 0→1000 as total_pwm goes 2000→3000
+    // LED2 fills from 01000 as total_pwm goes 20003000
     l2 = (uint32_t)fminf(fmaxf(total_pwm - 2000.0f, 0.0f), 1000.0f);
 
-    // LED1 fills from 0→1000 as total_pwm goes 3000→4000
+    // LED1 fills from 01000 as total_pwm goes 30004000
     l1 = (uint32_t)fminf(fmaxf(total_pwm - 3000.0f, 0.0f), 1000.0f);
 
     SetLEDs(l1, l2, l3, l4);
@@ -425,15 +425,15 @@ void update_cascade_leds(float dist_cm)
 
 ```
 progress  = (30.0 - 17.5) / 25.0  = 12.5 / 25.0  = 0.5
-total_pwm = 0.5 × 4000            = 2000.0
+total_pwm = 0.5  4000            = 2000.0
 
-LED4: min(2000,          1000) = 1000  ← fully ON  (100%)
+LED4: min(2000,          1000) = 1000   fully ON  (100%)
 LED3: min(max(2000-1000, 0), 1000)
-    = min(1000, 1000)             = 1000  ← fully ON  (100%)
+    = min(1000, 1000)             = 1000   fully ON  (100%)
 LED2: min(max(2000-2000, 0), 1000)
-    = min(0, 1000)                = 0     ← OFF        (0%)
+    = min(0, 1000)                = 0      OFF        (0%)
 LED1: min(max(2000-3000, 0), 1000)
-    = min(0, 1000)                = 0     ← OFF        (0%)
+    = min(0, 1000)                = 0      OFF        (0%)
 
 Result: LED4=ON, LED3=ON, LED2=OFF, LED1=OFF
 ```
@@ -441,13 +441,13 @@ Result: LED4=ON, LED3=ON, LED2=OFF, LED1=OFF
 ### Visual: What the LEDs Show at Various Distances
 
 ```
-30cm: ░░░░  (all off)
-25cm: ▒░░░  (LED4 dimly on, others off)
-22cm: █░░░  (LED4 full, others off)
-17cm: ██░░  (LED4 + LED3 full, others off)  ← 17.5cm example above
-13cm: ███░  (LED4 + LED3 + LED2 full, LED1 off)
- 8cm: ████▒ (all full except LED1 slightly dim)
- 5cm: ████  (all full: maximum brightness)
+30cm:   (all off)
+25cm:   (LED4 dimly on, others off)
+22cm:   (LED4 full, others off)
+17cm:   (LED4 + LED3 full, others off)   17.5cm example above
+13cm:   (LED4 + LED3 + LED2 full, LED1 off)
+ 8cm:  (all full except LED1 slightly dim)
+ 5cm:   (all full: maximum brightness)
 ```
 <img width="1678" height="1079" alt="UltrasonicFinal" src="https://github.com/user-attachments/assets/d1dc0e36-4485-4dcb-a26f-73941972d04b" />
 
@@ -522,13 +522,13 @@ Rather than discarding distance measurements during IR mode, the task saves the 
 **Priority hierarchy (implemented in task logic, not RTOS priority):**
 
 ```
-Highest → IR proximity blink (5 Hz, all LEDs, overrides everything)
-Middle  → Distance cascade (smooth fade, 30cm:5cm range)
-Lowest  → All off (distance > 30cm or sensor stopped)
+Highest  IR proximity blink (5 Hz, all LEDs, overrides everything)
+Middle   Distance cascade (smooth fade, 30cm:5cm range)
+Lowest   All off (distance > 30cm or sensor stopped)
 ```
 
-> 📸 **[Hardware Photo: Four LEDs mounted on breadboard, demonstrating cascade fill at various distances]** *(Contribute one via PR!)*
+>  **[Hardware Photo: Four LEDs mounted on breadboard, demonstrating cascade fill at various distances]** *(Contribute one via PR!)*
 
 ---
 
-*← [04: Secure Bootloader](04_secure_bootloader.md) | [06: Sensors & EXTI](06_sensors_exti.md) →*
+* [04: Secure Bootloader](04_secure_bootloader.md) | [06: Sensors & EXTI](06_sensors_exti.md) *

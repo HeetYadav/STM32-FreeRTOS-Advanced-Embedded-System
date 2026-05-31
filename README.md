@@ -16,7 +16,7 @@
 
 ---
 
-## 📑 Table of Contents
+##  Table of Contents
 
 - [Boot Sequence](#-boot-sequence)
 - [Features](#-features)
@@ -35,13 +35,13 @@
 
 ---
 
-## 🚀 Boot Sequence
+##  Boot Sequence
 
 Every power-on passes through the custom secure bootloader before the application ever gets a chance to run. The bootloader lives permanently in the lowest 32 KB of Flash and owns the reset vector.
 
 ```mermaid
 flowchart TD
-    A([🔌 RESET / Power-On]) --> B[Bootloader starts\n@ 0x0800_0000]
+    A([ RESET / Power-On]) --> B[Bootloader starts\n@ 0x0800_0000]
     B --> C{PB10 held LOW?}
 
     C -- YES --> OTA[Enter OTA Mode]
@@ -56,13 +56,13 @@ flowchart TD
     G -- YES --> H[Disable all peripherals\nSet VTOR = 0x0800_8000]
 
     H --> I[Set MSP from\nApp vector table]
-    I --> J([⚡ Jump to Application\nReset Handler])
+    I --> J([ Jump to Application\nReset Handler])
 
     OTA --> K[XMODEM-CRC receiver active\nSend 'C' prompt on UART]
     K --> L[Receive 128-byte packets\nwith CRC verification]
     L --> M[Erase Flash pages 16:255\nProgram in 8-byte double-words]
     M --> N[Update AppHeader CRC\nin Flash]
-    N --> O([🔄 System Reboot])
+    N --> O([ System Reboot])
 
     style A fill:#2d6a9f,color:#fff,stroke:#1a4a70
     style J fill:#27ae60,color:#fff,stroke:#1a7a40
@@ -72,7 +72,7 @@ flowchart TD
 
 ---
 
-## ✨ Features
+##  Features
 
 | Feature | Implementation | Hardware Used |
 |---|---|---|
@@ -80,13 +80,13 @@ flowchart TD
 | **Secure Boot** | Custom bootloader: magic-word check + STM32 HW CRC32 verification before every app launch | Flash @ 0x08000000, STM32 CRC peripheral |
 | **OTA Firmware Updates** | XMODEM-CRC protocol over UART; erases and reprograms app Flash sector live | UART1 (PA9/PA10), PB10 trigger button |
 | **Hardware PWM** | 4 independent PWM channels across 3 timers; smooth brightness fading algorithm | TIM1_CH1, TIM2_CH2, TIM3_CH1/CH2 |
-| **Ultrasonic Distance Sensing** | HC-SR04 trigger/echo; echo timed by 32-bit TIM5 at 1 MHz → cm distance; smooth 4-LED cascade | TIM5, EXTI on PB6, PC7 TRIG |
+| **Ultrasonic Distance Sensing** | HC-SR04 trigger/echo; echo timed by 32-bit TIM5 at 1 MHz  cm distance; smooth 4-LED cascade | TIM5, EXTI on PB6, PC7 TRIG |
 | **IR Proximity Detection** | HW-201 active-LOW interrupt; overrides ultrasonic with full-brightness blink | EXTI on PA7 (EXTI9_5 IRQ) |
-| **Serial CLI** | Interrupt-driven UART RX → `xRXQueue` → TerminalTask; command parser with help system | UART1 @ 115200 baud |
+| **Serial CLI** | Interrupt-driven UART RX  `xRXQueue`  TerminalTask; command parser with help system | UART1 @ 115200 baud |
 
 ---
 
-## 🔧 Hardware
+##  Hardware
 
 <img width="3735" height="2555" alt="HardwareSetup" src="https://github.com/user-attachments/assets/b9f799ea-b747-4c4d-8cca-d983820e10dc" />
 
@@ -98,55 +98,55 @@ flowchart TD
 | Microcontroller Board | STM32L476RG Nucleo-64 | Main MCU (Cortex-M4 @ 80 MHz, 96 KB RAM, 1 MB Flash) |
 | Ultrasonic Sensor | HC-SR04 | Distance measurement (2:400 cm) |
 | IR Proximity Sensor | HW-201 | Object detection override |
-| LEDs (×4) | Standard 5mm (any colour) | PWM-controlled distance indicator bar |
+| LEDs (4) | Standard 5mm (any colour) | PWM-controlled distance indicator bar |
 | Push Button (external) | Tactile SPST | OTA trigger + LED flash command |
 | USB-A to Mini-B cable |: | Power + ST-Link programming |
 | Breadboard + jumper wires |: | Wiring |
 
 ---
 
-## 🏗 System Architecture
+##  System Architecture
 
 The system is split into **two completely independent PlatformIO projects** that live in separate Flash regions and never share code. This separation means a corrupted application can never brick the device: the bootloader is always intact.
 
 ```
 Flash Memory Layout
-═══════════════════════════════════════════════════════════════════════
-0x0800_0000 ┌─────────────────────────────────────────────────────┐
-            │         SECURE BOOTLOADER (32 KB)                   │
-            │   ┌─────────────────────────────────────────────┐   │
-            │   │  Reset Vector (owns interrupt vector table)  │   │
-            │   │  PB10 GPIO check on every boot              │   │
-            │   │  STM32 HW CRC32 engine verification         │   │
-            │   │  XMODEM-CRC receiver (OTA mode)             │   │
-            │   │  Flash erase / double-word programmer       │   │
-            │   └─────────────────────────────────────────────┘   │
-0x0800_7FFF └─────────────────────────────────────────────────────┘
-                              │ CRC OK → Jump
-                              ▼
-0x0800_8000 ┌─────────────────────────────────────────────────────┐
-            │         FREERTOS APPLICATION (up to ~992 KB)        │
-            │                                                     │
-            │   [App Vector Table]  [AppHeader @ 0x08008188]      │
-            │        │                    │                       │
-            │        │              magic + CRC32                 │
-            │        │                                            │
-            │   ┌────┴──────────────────────────────────────┐    │
-            │   │            FreeRTOS Kernel                │    │
-            │   │  ┌──────────┐  ┌──────────┐  ┌────────┐  │    │
-            │   │  │HeartbeatT│  │SensorTask│  │LED Ctrl│  │    │
-            │   │  │ (Pri 1)  │  │ (Pri 4)  │  │(Pri 2) │  │    │
-            │   │  └──────────┘  └────┬─────┘  └───┬────┘  │    │
-            │   │  ┌──────────┐       │xSensorQ     │xLEDQ  │    │
-            │   │  │ButtonMon │  ┌────▼─────┐  ┌───▼────┐  │    │
-            │   │  │ (Pri 3)  │  │xSensorQ  │  │xLEDQ   │  │    │
-            │   │  └──────────┘  └──────────┘  └────────┘  │    │
-            │   │  ┌──────────┐       ┌──────────┐          │    │
-            │   │  │Terminal  │◄──────│ xRXQueue │          │    │
-            │   │  │ (Pri 2)  │       │(UART ISR)│          │    │
-            │   │  └──────────┘       └──────────┘          │    │
-            │   └────────────────────────────────────────────┘    │
-0x080F_FFFF └─────────────────────────────────────────────────────┘
+
+0x0800_0000 
+                     SECURE BOOTLOADER (32 KB)                   
+                  
+                 Reset Vector (owns interrupt vector table)     
+                 PB10 GPIO check on every boot                 
+                 STM32 HW CRC32 engine verification            
+                 XMODEM-CRC receiver (OTA mode)                
+                 Flash erase / double-word programmer          
+                  
+0x0800_7FFF 
+                               CRC OK  Jump
+                              
+0x0800_8000 
+                     FREERTOS APPLICATION (up to ~992 KB)        
+                                                                 
+               [App Vector Table]  [AppHeader @ 0x08008188]      
+                                                               
+                                  magic + CRC32                 
+                                                                
+                   
+                           FreeRTOS Kernel                    
+                           
+                 HeartbeatT  SensorTask  LED Ctrl      
+                  (Pri 1)     (Pri 4)    (Pri 2)       
+                           
+                        xSensorQ     xLEDQ      
+                 ButtonMon           
+                  (Pri 3)    xSensorQ    xLEDQ         
+                           
+                                      
+                 Terminal   xRXQueue               
+                  (Pri 2)         (UART ISR)              
+                                      
+                   
+0x080F_FFFF 
 ```
 
 ### Inter-Task Communication
@@ -165,7 +165,7 @@ graph LR
 
 ---
 
-## 📌 Complete Pin Mapping
+##  Complete Pin Mapping
 
 | Signal | MCU Pin | Peripheral | Direction | Notes |
 |---|---|---|---|---|
@@ -173,18 +173,18 @@ graph LR
 | **LED2** | PB5 | TIM3_CH2 (PWM) | OUT | AF2 |
 | **LED3** | PB3 | TIM2_CH2 (PWM) | OUT | AF1 |
 | **LED4** (farthest, first to light up) | PA8 | TIM1_CH1 (PWM) | OUT | AF1 |
-| **HC-SR04 TRIG** | PC7 | GPIO Output | OUT | 10 µs pulse to trigger |
-| **HC-SR04 ECHO** | PB6 | EXTI6 (EXTI9_5_IRQ) | IN | Rising→start TIM5, Falling→calc distance |
+| **HC-SR04 TRIG** | PC7 | GPIO Output | OUT | 10 s pulse to trigger |
+| **HC-SR04 ECHO** | PB6 | EXTI6 (EXTI9_5_IRQ) | IN | Risingstart TIM5, Fallingcalc distance |
 | **HW-201 IR OUT** | PA7 | EXTI7 (EXTI9_5_IRQ) | IN | Active LOW; falling = object detected |
 | **UART1 TX** | PA9 | USART1 | OUT | 115200 8N1: CLI output + XMODEM |
 | **UART1 RX** | PA10 | USART1 | IN | 115200 8N1: CLI input + XMODEM |
 | **Blue Button (onboard)** | PC13 | GPIO Input (EXTI13) | IN | Active LOW; triggers LED cascade |
-| **External Button (OTA trigger)** | PB10 | GPIO Input | IN | LOW on reset → OTA mode; HIGH = normal boot |
+| **External Button (OTA trigger)** | PB10 | GPIO Input | IN | LOW on reset  OTA mode; HIGH = normal boot |
 | **Heartbeat LED (onboard LD2)** | PA5 | GPIO Output | OUT | Toggled every 1 s by HeartbeatTask |
 
 ---
 
-## ⚡ Quick Start
+##  Quick Start
 
 ### Prerequisites
 
@@ -209,8 +209,8 @@ cd STM32-FreeRTOS-Advanced-Embedded-System
 This repository contains **two separate PlatformIO projects**. Open each one individually in VS Code:
 
 ```
-File → Open Folder → SecureBootloader_L476
-File → Open Folder → FreeRTOS_App_L476
+File  Open Folder  SecureBootloader_L476
+File  Open Folder  FreeRTOS_App_L476
 ```
 
 ---
@@ -222,7 +222,7 @@ File → Open Folder → FreeRTOS_App_L476
 
 1. Open the `SecureBootloader_L476` folder in VS Code (PlatformIO will auto-detect it)
 2. Connect your Nucleo board via USB
-3. Click **PlatformIO: Upload** (the → arrow in the bottom toolbar) or run:
+3. Click **PlatformIO: Upload** (the  arrow in the bottom toolbar) or run:
 
 ```bash
 cd SecureBootloader_L476
@@ -246,7 +246,7 @@ Expected build output (truncated):
 Compiling .pio/build/nucleo_l476rg/src/main.o
 ...
 [POST-BUILD] Injecting CRC32 into AppHeader @ offset 0x188...
-[POST-BUILD] CRC = 0xA3F72C11  ✓
+[POST-BUILD] CRC = 0xA3F72C11  
 === [SUCCESS] Took 8.34 seconds ===
 ```
 
@@ -284,7 +284,7 @@ Then start distance sensing:
 
 ---
 
-## 💻 CLI Reference
+##  CLI Reference
 
 All commands are sent over UART1 at 115200 baud. Commands are case-sensitive and terminated with `\r\n` (Enter key).
 
@@ -299,7 +299,7 @@ All commands are sent over UART1 at 115200 baud. Commands are case-sensitive and
 
 ---
 
-## 📡 OTA Firmware Update Guide
+##  OTA Firmware Update Guide
 
 OTA (Over-The-Air, in this case Over-UART) updates let you reprogram the application firmware **without a debugger**. The bootloader handles all flash erase and programming operations.
 
@@ -311,7 +311,7 @@ OTA (Over-The-Air, in this case Over-UART) updates let you reprogram the applica
 Hold **PB10 (external breadboard button) LOW** while pressing the **RESET button** (or cycling power). Release after reset.
 
 ```
-[BOOTLOADER] PB10 asserted → Entering OTA mode
+[BOOTLOADER] PB10 asserted  Entering OTA mode
 [BOOTLOADER] Erasing application Flash (pages 16-255)...
 [BOOTLOADER] Ready. Waiting for XMODEM transfer...
 CCCCCCCCCC
@@ -328,7 +328,7 @@ Open Tera Term and connect to the Nucleo's COM port at **115200 baud, 8N1**. You
 In Tera Term:
 
 ```
-File → Transfer → XMODEM → Send
+File  Transfer  XMODEM  Send
 ```
 
 Navigate to:
@@ -361,9 +361,9 @@ The board reboots, the bootloader re-verifies CRC, and jumps to the new firmware
 
 ---
 
-## 🧠 What I Learned / Engineering Challenges
+##  What I Learned / Engineering Challenges
 
-### 🐛 Bug #1: The XMODEM Unaligned Memory Access Fault
+###  Bug #1: The XMODEM Unaligned Memory Access Fault
 
 **Symptom:** XMODEM transfers would stall permanently after exactly one 128-byte packet (0.6% of a typical firmware image). The STM32 appeared to lock up silently.
 
@@ -389,11 +389,11 @@ HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, dw);
 
 ---
 
-### 🐛 Bug #2: The TIM2 Prescaler Shadow Register Bug (HC-SR04 Always Read 4 cm)
+###  Bug #2: The TIM2 Prescaler Shadow Register Bug (HC-SR04 Always Read 4 cm)
 
 **Symptom:** The HC-SR04 sensor always returned approximately **4 cm**, regardless of actual distance. Even with a wall 1 metre away, the distance stayed locked at 4 cm.
 
-**Investigation:** The HC-SR04 echo pulse width is measured with TIM5 running at 1 MHz (1 µs per tick). After the falling-edge EXTI fires on PB6, the timer count is read and divided by 58 to get centimetres. The math was correct. Suspicion shifted to the **timer frequency**.
+**Investigation:** The HC-SR04 echo pulse width is measured with TIM5 running at 1 MHz (1 s per tick). After the falling-edge EXTI fires on PB6, the timer count is read and divided by 58 to get centimetres. The math was correct. Suspicion shifted to the **timer frequency**.
 
 Checked TIM5's actual tick rate with a logic analyser: it was running far faster than 1 MHz: meaning the count was much smaller than expected for a given distance, producing artificially short (close) readings. The prescaler register was not taking effect.
 
@@ -404,13 +404,13 @@ Checked TIM5's actual tick rate with a logic analyser: it was running far faster
 TIM5->PSC = 79;  // intend 80 MHz / 80 = 1 MHz
 
 // Missing the magic line:
-// TIM5->EGR = TIM_EGR_UG;  ← forces immediate Update Event → PSC loads NOW
+// TIM5->EGR = TIM_EGR_UG;   forces immediate Update Event  PSC loads NOW
 ```
 
 **Fix: one line:**
 ```c
-TIM5->PSC = 79;          // 80 MHz / (79+1) = 1 MHz (1 µs per tick)
-TIM5->EGR = TIM_EGR_UG; // Force update event → shadow registers load immediately
+TIM5->PSC = 79;          // 80 MHz / (79+1) = 1 MHz (1 s per tick)
+TIM5->EGR = TIM_EGR_UG; // Force update event  shadow registers load immediately
 TIM5->SR  = 0;           // Clear the UIF flag the EGR write just set
 ```
 
@@ -418,7 +418,7 @@ TIM5->SR  = 0;           // Clear the UIF flag the EGR write just set
 
 ---
 
-### 🏛 Architectural Insight: Separating Bootloader from Application
+###  Architectural Insight: Separating Bootloader from Application
 
 Splitting firmware into two independent PlatformIO projects with a hard Flash boundary (`0x08008000`) and a verified handshake (`AppHeader` magic + CRC32) taught several production-grade lessons:
 
@@ -428,7 +428,7 @@ Splitting firmware into two independent PlatformIO projects with a hard Flash bo
 
 ---
 
-## 🛠 Software & Tools
+##  Software & Tools
 
 | Tool | Version | Purpose |
 |---|---|---|
@@ -442,64 +442,64 @@ Splitting firmware into two independent PlatformIO projects with a hard Flash bo
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 STM32-FreeRTOS-Advanced-Embedded-System/
-│
-├── README.md                          ← You are here
-│
-├── docs/                              ← Full documentation (see links below)
-│   ├── bootloader.md                  ← Bootloader deep-dive: design, flow, CRC, XMODEM
-│   ├── freertos_app.md                ← FreeRTOS app: all 5 tasks, queues, priorities
-│   ├── hardware_wiring.md             ← Pin mapping, schematic description, photos
-│   ├── ota_update_guide.md            ← Step-by-step XMODEM OTA walkthrough
-│   └── bugs_and_fixes.md             ← Detailed bug post-mortems with register-level analysis
-│
-├── SecureBootloader_L476/             ← PlatformIO Project 1: Secure Bootloader
-│   ├── platformio.ini                 ← Build config: flash offset 0x0, linker script
-│   └── src/
-│       └── main.c                     ← All bootloader logic (GPIO, CRC, XMODEM, Flash)
-│
-└── FreeRTOS_App_L476/                 ← PlatformIO Project 2: FreeRTOS Application
-    ├── platformio.ini                 ← Build config: flash offset 0x8000, post-build script
-    └── src/
-        ├── main.c                     ← FreeRTOS init, task creation, peripheral setup
-        ├── tasks/
-        │   ├── heartbeat_task.c       ← HeartbeatTask: PA5 toggle every 1 s
-        │   ├── button_monitor_task.c  ← ButtonMonitorTask: PC13 cascade, PB10 flash
-        │   ├── terminal_task.c        ← TerminalTask: CLI parser, command dispatch
-        │   ├── sensor_task.c          ← SensorTask: HC-SR04 trigger, echo timing, queue
-        │   └── led_controller_task.c  ← LEDControllerTask: PWM fading, IR blink override
-        ├── isr/
-        │   └── stm32l4xx_it.c         ← EXTI9_5 (ECHO/IR), UART1 RX ISRs
-        ├── drivers/
-        │   ├── hcsr04.c               ← HC-SR04 driver: TIM5 microsecond timing
-        │   ├── hw201.c                ← HW-201 IR driver: EXTI interrupt handler
-        │   └── pwm_leds.c             ← PWM LED driver: TIM1/2/3 init, duty cycle API
-        ├── cli/
-        │   └── cli_parser.c           ← Command string parser and dispatcher
-        └── scripts/
-            └── inject_crc.py          ← Post-build: computes CRC32, patches binary
+
+ README.md                           You are here
+
+ docs/                               Full documentation (see links below)
+    bootloader.md                   Bootloader deep-dive: design, flow, CRC, XMODEM
+    freertos_app.md                 FreeRTOS app: all 5 tasks, queues, priorities
+    hardware_wiring.md              Pin mapping, schematic description, photos
+    ota_update_guide.md             Step-by-step XMODEM OTA walkthrough
+    bugs_and_fixes.md              Detailed bug post-mortems with register-level analysis
+
+ SecureBootloader_L476/              PlatformIO Project 1: Secure Bootloader
+    platformio.ini                  Build config: flash offset 0x0, linker script
+    src/
+        main.c                      All bootloader logic (GPIO, CRC, XMODEM, Flash)
+
+ FreeRTOS_App_L476/                  PlatformIO Project 2: FreeRTOS Application
+     platformio.ini                  Build config: flash offset 0x8000, post-build script
+     src/
+         main.c                      FreeRTOS init, task creation, peripheral setup
+         tasks/
+            heartbeat_task.c        HeartbeatTask: PA5 toggle every 1 s
+            button_monitor_task.c   ButtonMonitorTask: PC13 cascade, PB10 flash
+            terminal_task.c         TerminalTask: CLI parser, command dispatch
+            sensor_task.c           SensorTask: HC-SR04 trigger, echo timing, queue
+            led_controller_task.c   LEDControllerTask: PWM fading, IR blink override
+         isr/
+            stm32l4xx_it.c          EXTI9_5 (ECHO/IR), UART1 RX ISRs
+         drivers/
+            hcsr04.c                HC-SR04 driver: TIM5 microsecond timing
+            hw201.c                 HW-201 IR driver: EXTI interrupt handler
+            pwm_leds.c              PWM LED driver: TIM1/2/3 init, duty cycle API
+         cli/
+            cli_parser.c            Command string parser and dispatcher
+         scripts/
+             inject_crc.py           Post-build: computes CRC32, patches binary
 ```
 
 ---
 
-## 📚 Documentation
+##  Documentation
 
 Full engineering documentation lives in the [`docs/`](docs/) folder:
 
 | Document | Description |
 |---|---|
-| [📖 Bootloader Deep-Dive](docs/bootloader.md) | Complete walkthrough of SecureBootloader_L476: boot decision logic, STM32 CRC peripheral usage, XMODEM-CRC protocol implementation, Flash erase/program sequence, VTOR/MSP jump sequence |
-| [📖 FreeRTOS Application](docs/freertos_app.md) | All 5 tasks documented: priorities, stack sizes, timing, inter-task communication via queues; distance-to-LED mapping algorithm; IR override logic |
-| [📖 Hardware Wiring Guide](docs/hardware_wiring.md) | Complete pin mapping tables, breadboard wiring guide, signal timing diagrams for HC-SR04 and HW-201, photo placeholders |
-| [📖 OTA Update Guide](docs/ota_update_guide.md) | Step-by-step XMODEM OTA guide with screenshots, troubleshooting common failures (NAK loops, timeout, incomplete transfer) |
-| [📖 Bugs & Engineering Fixes](docs/bugs_and_fixes.md) | Detailed post-mortems: unaligned access HardFault, TIM2 PSC shadow register, TIM2/TIM5 conflict resolution: all with register-level analysis |
+| [ Bootloader Deep-Dive](docs/bootloader.md) | Complete walkthrough of SecureBootloader_L476: boot decision logic, STM32 CRC peripheral usage, XMODEM-CRC protocol implementation, Flash erase/program sequence, VTOR/MSP jump sequence |
+| [ FreeRTOS Application](docs/freertos_app.md) | All 5 tasks documented: priorities, stack sizes, timing, inter-task communication via queues; distance-to-LED mapping algorithm; IR override logic |
+| [ Hardware Wiring Guide](docs/hardware_wiring.md) | Complete pin mapping tables, breadboard wiring guide, signal timing diagrams for HC-SR04 and HW-201, photo placeholders |
+| [ OTA Update Guide](docs/ota_update_guide.md) | Step-by-step XMODEM OTA guide with screenshots, troubleshooting common failures (NAK loops, timeout, incomplete transfer) |
+| [ Bugs & Engineering Fixes](docs/bugs_and_fixes.md) | Detailed post-mortems: unaligned access HardFault, TIM2 PSC shadow register, TIM2/TIM5 conflict resolution: all with register-level analysis |
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are very welcome! Here's what would be most valuable:
 
@@ -516,7 +516,7 @@ Contributions are very welcome! Here's what would be most valuable:
 
 ---
 
-## 📄 License
+##  License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for full terms.
 
@@ -542,8 +542,8 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
 <div align="center">
 
-**Built with FreeRTOS · STM32 HAL · PlatformIO · ARM GCC**
+**Built with FreeRTOS  STM32 HAL  PlatformIO  ARM GCC**
 
-*If this project helped you, please consider giving it a ⭐: it helps others find it.*
+*If this project helped you, please consider giving it a : it helps others find it.*
 
 </div>

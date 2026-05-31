@@ -1,6 +1,6 @@
-﻿# CLI Terminal: The Serial Command Interface
+# CLI Terminal: The Serial Command Interface
 
-> **Navigation**: [â† 07 Button & GPIO](07_button_gpio.md) | [Home](../README.md) | [09 Debugging Guide â†’](09_debugging.md)
+> **Navigation**: [ 07 Button & GPIO](07_button_gpio.md) | [Home](../README.md) | [09 Debugging Guide ->](09_debugging.md)
 
 ---
 
@@ -22,27 +22,27 @@ The CLI is a classic **interrupt-driven, queue-buffered, task-parsed** terminal 
 
 ```
 User types a character in terminal
-        â†“
+        
 USART1 peripheral receives byte into DR register
-        â†“
+        
 USART1_IRQHandler fires (RXNE interrupt)
-        â†“
+        
 Byte extracted from USART1->DR
-        â†“
-xQueueSendFromISR(xRXQueue, &byte, ...)    â† ISR exits immediately
-        â†“
+        
+xQueueSendFromISR(xRXQueue, &byte, ...)     ISR exits immediately
+        
 TerminalTask unblocks (was waiting on xRXQueue)
-        â†“
+        
 Byte appended to line_buf[]
-        â†“
-If byte == '\r' â†’ line_buf is null-terminated â†’ parse_command()
-        â†“
+        
+If byte == '\r' -> line_buf is null-terminated -> parse_command()
+        
 Command dispatched:
-  â”œâ”€â”€ "sensor start"  â†’ xQueueSend(xSensorQueue, SENSOR_ARM, 0)
-  â”œâ”€â”€ "led cascade"   â†’ xQueueSend(xLEDQueue, LED_CMD_CASCADE, 0)
-  â”œâ”€â”€ "status"        â†’ HAL_UART_Transmit(uptime string)
-  â””â”€â”€ unknown         â†’ HAL_UART_Transmit("Unknown command\r\n")
-        â†“
+  |-- "sensor start"  -> xQueueSend(xSensorQueue, SENSOR_ARM, 0)
+  |-- "led cascade"   -> xQueueSend(xLEDQueue, LED_CMD_CASCADE, 0)
+  |-- "status"        -> HAL_UART_Transmit(uptime string)
+  L-- unknown         -> HAL_UART_Transmit("Unknown command\r\n")
+        
 HAL_UART_Transmit sends response back to terminal
 ```
 
@@ -50,7 +50,7 @@ HAL_UART_Transmit sends response back to terminal
 
 | Property | Implementation | Benefit |
 |---|---|---|
-| Non-blocking receive | USART1 RXNE interrupt â†’ queue | TerminalTask sleeps until data arrives |
+| Non-blocking receive | USART1 RXNE interrupt -> queue | TerminalTask sleeps until data arrives |
 | Buffered input | xRXQueue depth = 64 bytes | Handles rapid typing bursts without loss |
 | Line-oriented parsing | Assembly ends at `\r` or `\n` | Compatible with all terminal software |
 | Single-task parsing | Only TerminalTask calls parse_command() | No concurrent access issues |
@@ -76,23 +76,23 @@ while (1) {
 }
 ```
 
-In a polling design, the CPU is locked in a busy-wait loop checking whether a character has arrived. At 115200 baud, a single byte takes **87Âµs** to arrive. The MCU burns thousands of cycles doing nothing useful.
+In a polling design, the CPU is locked in a busy-wait loop checking whether a character has arrived. At 115200 baud, a single byte takes **87us** to arrive. The MCU burns thousands of cycles doing nothing useful.
 
 ### Our Approach: Interrupt-Driven
 
 ```
 User types 'h'
-     â”‚
-     â:¼
+     |
+     :
 USART1 peripheral finishes receiving the byte
-     â”‚
-     â:¼ (hardware generates RXNE interrupt : takes ~dozen cycles)
+     |
+     : (hardware generates RXNE interrupt : takes ~dozen cycles)
 USART1_IRQHandler:
-     â”œâ”€ Read byte from RDR in one instruction (clears RXNE automatically)
-     â”œâ”€ xQueueSendFromISR â†’ posts byte to xRXQueue
-     â””â”€ portYIELD_FROM_ISR â†’ TerminalTask unblocks if higher priority
-     â”‚
-     â:¼ (ISR exits : total ISR time < 1Âµs)
+     |- Read byte from RDR in one instruction (clears RXNE automatically)
+     |- xQueueSendFromISR -> posts byte to xRXQueue
+     L- portYIELD_FROM_ISR -> TerminalTask unblocks if higher priority
+     |
+     : (ISR exits : total ISR time < 1us)
 CPU resumes whatever it was doing, or switches to TerminalTask
 ```
 
@@ -100,7 +100,7 @@ CPU resumes whatever it was doing, or switches to TerminalTask
 - **Zero polling overhead**: CPU does nothing between characters
 - **No missed bytes**: The interrupt fires within a few cycles of byte receipt; the USART has a 1-byte receive buffer (RDR), and the interrupt clears it immediately
 - **FreeRTOS integration**: `xQueueSendFromISR` and `portYIELD_FROM_ISR` allow TerminalTask to run immediately when a character arrives, without waiting for the next scheduler tick
-- **Deterministic latency**: Character â†’ ISR â†’ queue â†’ task in <10Âµs end-to-end
+- **Deterministic latency**: Character -> ISR -> queue -> task in <10us end-to-end
 
 ---
 
@@ -111,7 +111,7 @@ void USART1_IRQHandler(void) {
     // FreeRTOS context-switch request flag
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-    // â”€â”€ Check for RXNE (Receive Data Register Not Empty) interrupt â”€â”€
+    // -- Check for RXNE (Receive Data Register Not Empty) interrupt --
     // RXNE is set by hardware when a complete byte has been received and
     // loaded into the receive data register (USART1->RDR).
     // Reading RDR automatically clears the RXNE flag.
@@ -132,7 +132,7 @@ void USART1_IRQHandler(void) {
         xQueueSendFromISR(xRXQueue, &received_byte, &xHigherPriorityTaskWoken);
     }
 
-    // â”€â”€ Check for UART errors (optional but good practice) â”€â”€
+    // -- Check for UART errors (optional but good practice) --
     // ORE = Overrun Error: new byte arrived before RDR was read : we lost a byte
     // NE  = Noise Error: line noise caused a framing issue
     // FE  = Framing Error: stop bit not detected where expected
@@ -146,7 +146,7 @@ void USART1_IRQHandler(void) {
         // In a production system, you would increment an error counter here
     }
 
-    // â”€â”€ Trigger context switch if needed â”€â”€
+    // -- Trigger context switch if needed --
     // If TerminalTask just became Ready (because we sent it a byte),
     // and TerminalTask has higher priority than the interrupted task,
     // request an immediate context switch via PendSV.
@@ -218,7 +218,7 @@ All commands are case-insensitive. Send with `\r` (Enter key) or `\n`.
 | `help` | Lists all available commands | None | Formatted command list with descriptions |
 | `sensor start` | Arms the sensing system | Enables HC-SR04 trigger loop, IR monitoring, LED distance bar graph | `[OK] Sensors armed. LED bar graph active.\r\n` then distance readings every 500ms |
 | `sensor stop` | Disarms the sensing system | Stops HC-SR04 triggers, turns off all PWM LEDs, clears IR override | `[OK] Sensors stopped. LEDs off.\r\n` |
-| `led cascade` | Runs Knight Rider sweep pattern | Sweeps LEDs 1â†’4â†’1 three times at full brightness | `[OK] Running cascade pattern...\r\n` then `Done.\r\n` |
+| `led cascade` | Runs Knight Rider sweep pattern | Sweeps LEDs 1->4->1 three times at full brightness | `[OK] Running cascade pattern...\r\n` then `Done.\r\n` |
 | `led flash` | Blinks all LEDs five times | All four LEDs blink on/off at 100% duty, 5 cycles at 200ms interval | `[OK] Running flash pattern...\r\n` then `Done.\r\n` |
 | `status` | Reports system uptime and state | None | `Uptime: 12345 ms | Sensors: ARMED | IR: CLEAR\r\n` |
 
@@ -232,7 +232,7 @@ void parse_command(const char *cmd) {
     lower[strlen(cmd)] = '\0';
 
     if (strcmp(lower, "help") == 0) {
-        // â”€â”€ help â”€â”€
+        // -- help --
         const char *help_text =
             "Available commands:\r\n"
             "  sensor start  - Arm sensors, enable LED bar graph\r\n"
@@ -244,7 +244,7 @@ void parse_command(const char *cmd) {
         HAL_UART_Transmit(&huart1, (uint8_t*)help_text, strlen(help_text), HAL_MAX_DELAY);
 
     } else if (strcmp(lower, "sensor start") == 0) {
-        // â”€â”€ sensor start â”€â”€
+        // -- sensor start --
         uint32_t cmd_msg = SENSOR_CMD_ARM;
         if (xQueueSend(xSensorQueue, &cmd_msg, 0) == pdTRUE) {
             HAL_UART_Transmit(&huart1,
@@ -252,28 +252,28 @@ void parse_command(const char *cmd) {
         }
 
     } else if (strcmp(lower, "sensor stop") == 0) {
-        // â”€â”€ sensor stop â”€â”€
+        // -- sensor stop --
         uint32_t cmd_msg = SENSOR_CMD_DISARM;
         xQueueSend(xSensorQueue, &cmd_msg, 0);
         HAL_UART_Transmit(&huart1,
             (uint8_t*)"[OK] Sensors stopped. LEDs off.\r\n", 33, 100);
 
     } else if (strcmp(lower, "led cascade") == 0) {
-        // â”€â”€ led cascade â”€â”€
+        // -- led cascade --
         uint32_t cmd_msg = LED_CMD_CASCADE;
         xQueueSend(xLEDQueue, &cmd_msg, 0);
         HAL_UART_Transmit(&huart1,
             (uint8_t*)"[OK] Running cascade pattern...\r\n", 33, 100);
 
     } else if (strcmp(lower, "led flash") == 0) {
-        // â”€â”€ led flash â”€â”€
+        // -- led flash --
         uint32_t cmd_msg = LED_CMD_FLASH;
         xQueueSend(xLEDQueue, &cmd_msg, 0);
         HAL_UART_Transmit(&huart1,
             (uint8_t*)"[OK] Running flash pattern...\r\n", 31, 100);
 
     } else if (strcmp(lower, "status") == 0) {
-        // â”€â”€ status â”€â”€
+        // -- status --
         uint32_t uptime_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
         char buf[128];
         snprintf(buf, sizeof(buf),
@@ -284,7 +284,7 @@ void parse_command(const char *cmd) {
         HAL_UART_Transmit(&huart1, (uint8_t*)buf, strlen(buf), 100);
 
     } else {
-        // â”€â”€ unknown command â”€â”€
+        // -- unknown command --
         const char *err = "[ERR] Unknown command. Type 'help'.\r\n";
         HAL_UART_Transmit(&huart1, (uint8_t*)err, strlen(err), 100);
     }
@@ -306,9 +306,9 @@ The following is a complete annotated terminal transcript showing a typical oper
 Tera Term v5.6.1 is the terminal used during development and for XMODEM OTA updates.
 
 1. Install [Tera Term v5.6.1](https://github.com/TeraTermProject/teraterm/releases)
-2. Open Tera Term â†’ **New connection** â†’ Select **Serial**
+2. Open Tera Term -> **New connection** -> Select **Serial**
 3. Choose the COM port shown as **STMicroelectronics Virtual COM Port** in Device Manager
-4. Go to **Setup â†’ Serial port** and configure:
+4. Go to **Setup -> Serial port** and configure:
 
 | Setting | Value |
 |---|---|
@@ -322,14 +322,14 @@ Tera Term v5.6.1 is the terminal used during development and for XMODEM OTA upda
 5. Press **Reset** on the Nucleo board : the startup banner should appear immediately
 
 > [!TIP]
-> In Tera Term, enable **Local Echo** under **Setup â†’ Terminal** if you want to see characters as you type them. The firmware also echoes received characters back, so you may see double characters without this : disable one or the other.
+> In Tera Term, enable **Local Echo** under **Setup -> Terminal** if you want to see characters as you type them. The firmware also echoes received characters back, so you may see double characters without this : disable one or the other.
 
 ### Option B: PuTTY
 
-1. Open PuTTY â†’ **Serial** connection type
+1. Open PuTTY -> **Serial** connection type
 2. Serial line: your COM port
 3. Speed: **115200**
-4. Go to **Category â†’ Connection â†’ Serial**:
+4. Go to **Category -> Connection -> Serial**:
 
 | Setting | Value |
 |---|---|
@@ -354,7 +354,7 @@ Tera Term v5.6.1 is the terminal used during development and for XMODEM OTA upda
 ### Finding the Correct COM Port
 
 On Windows:
-- Open **Device Manager** â†’ **Ports (COM & LPT)**
+- Open **Device Manager** -> **Ports (COM & LPT)**
 - Look for **STMicroelectronics Virtual COM Port (COMx)**
 - This appears when the Nucleo's USB cable is plugged in and the ST-Link driver is installed
 
@@ -453,7 +453,7 @@ void SensorTask(void *pvParameters) {
 |---|---|
 | UART peripheral | USART1, PA9=TX, PA10=RX |
 | Baud rate | 115200, 8N1, no flow control |
-| Receive method | RXNE interrupt â†’ xRXQueue â†’ TerminalTask |
+| Receive method | RXNE interrupt -> xRXQueue -> TerminalTask |
 | Queue | xRXQueue, 64 bytes depth, 1 byte per slot |
 | Line parsing | Assembled in TerminalTask on `\r`/`\n` |
 | Command dispatch | `parse_command()` in TerminalTask |
@@ -465,4 +465,4 @@ The CLI transforms the embedded system from a silent, monolithic device into an 
 
 ---
 
-> **Navigation**: [â† 07 Button & GPIO](07_button_gpio.md) | [Home](../README.md) | [09 Debugging Guide â†’](09_debugging.md)
+> **Navigation**: [ 07 Button & GPIO](07_button_gpio.md) | [Home](../README.md) | [09 Debugging Guide ->](09_debugging.md)

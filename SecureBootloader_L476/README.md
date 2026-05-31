@@ -20,17 +20,17 @@ For the full deep-dive, see [`docs/04_secure_bootloader.md`](../docs/04_secure_b
 
 ```
 STM32L476RG Flash (1MB)
-┌──────────────────────────────────┐ 0x0800_0000
-│                                  │
-│   SecureBootloader_L476          │ Pages 0:15 (32KB)
-│   (this project)                 │
-│                                  │
-├──────────────────────────────────┤ 0x0800_8000
-│   FreeRTOS_App_L476              │
-│   (vector table, AppHeader,      │ Pages 16:511 (~992KB)
-│    application code)             │
-│                                  │
-└──────────────────────────────────┘ 0x080F_FFFF
+ 0x0800_0000
+                                  
+   SecureBootloader_L476           Pages 0:15 (32KB)
+   (this project)                 
+                                  
+ 0x0800_8000
+   FreeRTOS_App_L476              
+   (vector table, AppHeader,       Pages 16:511 (~992KB)
+    application code)             
+                                  
+ 0x080F_FFFF
 ```
 
 ---
@@ -87,7 +87,7 @@ Followed immediately by the FreeRTOS application startup message.
 
 <img width="1919" height="1079" alt="Screenshot 2026-05-31 194216" src="https://github.com/user-attachments/assets/05f6f78a-6c7a-4950-a788-aaffb597e5d6" />
 
-The `C` characters are the XMODEM-CRC initiation signal. Open Tera Term → File → Transfer → XMODEM → Send → select `FreeRTOS_App_L476/.pio/build/nucleo_l476rg/firmware.bin`.
+The `C` characters are the XMODEM-CRC initiation signal. Open Tera Term  File  Transfer  XMODEM  Send  select `FreeRTOS_App_L476/.pio/build/nucleo_l476rg/firmware.bin`.
 
 ### After Successful OTA
 
@@ -111,4 +111,4 @@ CRC MATCH! Jumping to Application...
 
 ---
 
-*← [Back to main README](../README.md)* | *Next: [FreeRTOS Application →](../FreeRTOS_App_L476/README.md)*
+* [Back to main README](../README.md)* | *Next: [FreeRTOS Application ](../FreeRTOS_App_L476/README.md)*

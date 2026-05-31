@@ -1,6 +1,6 @@
 # System Architecture
 
-> **Navigation**: [← Back to README](../README.md) | [Hardware Wiring →](02_hardware_wiring.md) | [Bootloader →](03_bootloader.md) | [FreeRTOS App →](04_freertos_app.md)
+> **Navigation**: [ Back to README](../README.md) | [Hardware Wiring ](02_hardware_wiring.md) | [Bootloader ](03_bootloader.md) | [FreeRTOS App ](04_freertos_app.md)
 
 ---
 
@@ -51,32 +51,32 @@ The Python post-build script `inject_crc.py` computes a **CRC32** over the entir
 
 ## 2. Flash Memory Map
 
-The STM32L476RG has **1 MB of flash** organized as 2 banks × 256 pages × 2 KB/page. This project uses a simple, single-bank layout where the first 32 KB (pages 0:15) is permanently reserved for the bootloader.
+The STM32L476RG has **1 MB of flash** organized as 2 banks  256 pages  2 KB/page. This project uses a simple, single-bank layout where the first 32 KB (pages 0:15) is permanently reserved for the bootloader.
 
 ```mermaid
 block-beta
   columns 1
 
-  block:flash["🗂️ STM32L476RG Flash: 1MB (0x08000000 → 0x080FFFFF)"]:
+  block:flash[" STM32L476RG Flash: 1MB (0x08000000  0x080FFFFF)"]:
     columns 1
 
-    boot["🔒 BOOTLOADER: 32 KB (Pages 0:15)\n0x08000000 → 0x08007FFF\nSecureBootloader_L476\nNever erased by OTA"]
+    boot[" BOOTLOADER: 32 KB (Pages 0:15)\n0x08000000  0x08007FFF\nSecureBootloader_L476\nNever erased by OTA"]
 
-    vt["📌 APP VECTOR TABLE: 384 bytes\n0x08008000 → 0x0800817F\nSCB->VTOR set here at jump time\n(Stack pointer, Reset_Handler, all IRQ vectors)"]
+    vt[" APP VECTOR TABLE: 384 bytes\n0x08008000  0x0800817F\nSCB->VTOR set here at jump time\n(Stack pointer, Reset_Handler, all IRQ vectors)"]
 
-    hdr["🏷️ APP HEADER (AppHeader struct): 20 bytes\n0x08008188 → 0x0800819B\nmagic: 0xAA55AA55\ncrc32: computed by inject_crc.py\nlength: binary size in bytes\nversion: firmware version word"]
+    hdr[" APP HEADER (AppHeader struct): 20 bytes\n0x08008188  0x0800819B\nmagic: 0xAA55AA55\ncrc32: computed by inject_crc.py\nlength: binary size in bytes\nversion: firmware version word"]
 
-    app["⚙️ APP CODE + DATA: ~19 KB used\n0x080081A0 → end of used flash\nFreeRTOS_App_L476\nAll tasks, drivers, HAL, FreeRTOS kernel"]
+    app[" APP CODE + DATA: ~19 KB used\n0x080081A0  end of used flash\nFreeRTOS_App_L476\nAll tasks, drivers, HAL, FreeRTOS kernel"]
 
-    free["💾 FREE FLASH: ~950 KB available\nErased by OTA before reprogramming\nAvailable for future app growth\nor data logging (EEPROM emulation)"]
+    free[" FREE FLASH: ~950 KB available\nErased by OTA before reprogramming\nAvailable for future app growth\nor data logging (EEPROM emulation)"]
   end
 ```
 
 ### Why 0x08008000 for the App?
 
-The bootloader occupies pages 0:15 (32 KB). The application **must** start on a page boundary: 0x08008000 is exactly page 16. The STM32 `VTOR` register (Vector Table Offset Register) requires the vector table base to be aligned to a power of 2 that is ≥ the vector table size.
+The bootloader occupies pages 0:15 (32 KB). The application **must** start on a page boundary: 0x08008000 is exactly page 16. The STM32 `VTOR` register (Vector Table Offset Register) requires the vector table base to be aligned to a power of 2 that is  the vector table size.
 
-For the STM32L476, the vector table has 98 entries × 4 bytes = 392 bytes, so VTOR alignment must be ≥ 512 bytes. `0x08008000` satisfies this easily.
+For the STM32L476, the vector table has 98 entries  4 bytes = 392 bytes, so VTOR alignment must be  512 bytes. `0x08008000` satisfies this easily.
 
 ### AppHeader Struct Layout
 
@@ -99,10 +99,10 @@ typedef struct {
 
 ```mermaid
 flowchart TD
-    POR(["🔌 Power-On Reset / Hardware Reset"])
+    POR([" Power-On Reset / Hardware Reset"])
     POR --> ROM["STM32 ROM Bootloader\nLoads SP from 0x08000000\nJumps to Reset_Handler at 0x08000004"]
 
-    ROM --> BL_INIT["SecureBootloader_L476 starts\nInit clocks (HSI16 → PLL → 80MHz)\nInit UART1 (115200 baud)\nInit CRC peripheral\nInit GPIO for PB10"]
+    ROM --> BL_INIT["SecureBootloader_L476 starts\nInit clocks (HSI16  PLL  80MHz)\nInit UART1 (115200 baud)\nInit CRC peripheral\nInit GPIO for PB10"]
 
     BL_INIT --> CHECK_BTN{"PB10 button\nheld LOW?"}
 
@@ -127,7 +127,7 @@ flowchart TD
     SET_VTOR --> SET_MSP["Set MSP from app vector table word 0\n__set_MSP(*(__IO uint32_t*)0x08008000)"]
     SET_MSP --> JUMP["Read Reset_Handler address\nfrom app vector table word 1\nJump via function pointer\n: FreeRTOS App starts running :"]
 
-    JUMP --> APP(["🚀 FreeRTOS_App_L476\nRunning at 0x08008000"])
+    JUMP --> APP([" FreeRTOS_App_L476\nRunning at 0x08008000"])
 
     style POR fill:#2d4a7a,color:#fff
     style APP fill:#2d7a4a,color:#fff
@@ -185,11 +185,11 @@ flowchart TD
     end
 
     subgraph TASKS ["FreeRTOS Tasks"]
-        HB["💓 HeartbeatTask\nPriority 1\nPA5 toggle @ 1s"]
-        TT["🖥️ TerminalTask\nPriority 2\nUART CLI parser"]
-        LED["💡 LEDControllerTask\nPriority 2\nPWM fade + IR blink"]
-        BTN["🔘 ButtonMonitorTask\nPriority 3\nPC13 + PB10 @ 50ms"]
-        SEN["📡 SensorTask\nPriority 4\nHC-SR04 @ 500ms"]
+        HB[" HeartbeatTask\nPriority 1\nPA5 toggle @ 1s"]
+        TT[" TerminalTask\nPriority 2\nUART CLI parser"]
+        LED[" LEDControllerTask\nPriority 2\nPWM fade + IR blink"]
+        BTN[" ButtonMonitorTask\nPriority 3\nPC13 + PB10 @ 50ms"]
+        SEN[" SensorTask\nPriority 4\nHC-SR04 @ 500ms"]
     end
 
     subgraph QUEUES ["FreeRTOS Queues"]
@@ -208,7 +208,7 @@ flowchart TD
     IR -->|"Posts IR_DETECT\nor IR_CLEAR"| LQUEUE
 
     SEN -->|"Posts SensorData_t\n(distance_cm)"| SQUEUE
-    SEN -->|"Reads SensorData_t\n→ maps to LEDCommand"| LQUEUE
+    SEN -->|"Reads SensorData_t\n maps to LEDCommand"| LQUEUE
 
     BTN -->|"Posts CMD_CASCADE\nor CMD_FLASH"| LQUEUE
     BTN -->|"Posts 'f' command"| RXQUEUE
@@ -299,7 +299,7 @@ FreeRTOS queues decouple producers from consumers entirely: a sensor ISR doesn't
 |---|---|---|---|---|---|
 | `xLEDQueue` | `LEDCommand_t` (enum) | 5 | `SensorTask`, `ButtonMonitorTask`, `TerminalTask`, EXTI ISR (IR) | `LEDControllerTask` | What LED pattern to display next |
 | `xRXQueue` | `uint8_t` (ASCII char) | 64 | `USART1_IRQHandler` | `TerminalTask` | One received UART byte per message |
-| `xSensorQueue` | `uint32_t` (pulse µs) | 5 | `EXTI9_5_IRQHandler` (ECHO falling) | `SensorTask` | Raw echo pulse width in microseconds |
+| `xSensorQueue` | `uint32_t` (pulse s) | 5 | `EXTI9_5_IRQHandler` (ECHO falling) | `SensorTask` | Raw echo pulse width in microseconds |
 
 ### LED Command Enum
 
@@ -309,7 +309,7 @@ typedef enum {
     CMD_CASCADE_1  = 1,   // LED4 only (distance ~25-30cm)
     CMD_CASCADE_2  = 2,   // LED4 + LED3 (distance ~20-25cm)
     CMD_CASCADE_3  = 3,   // LED4 + LED3 + LED2 (distance ~10-20cm)
-    CMD_CASCADE_4  = 4,   // All LEDs full (distance ≤ 5cm)
+    CMD_CASCADE_4  = 4,   // All LEDs full (distance  5cm)
     CMD_FLASH      = 5,   // Flash all LEDs (PB10 button or 'led flash' CLI)
     IR_OBJECT_DETECTED = 6,  // IR sees object: blink all at 100%
     IR_OBJECT_REMOVED  = 7,  // IR cleared: resume ultrasonic-driven mode
@@ -343,14 +343,14 @@ Memory utilization is tracked per-build using the PlatformIO build output. The f
 | **RAM** | < 2 KB (estimated) | 98,304 bytes (96 KB) | **< 2%** |
 
 > [!TIP]
-> With 1.8% flash utilization in the application, there is enormous room to grow. The FreeRTOS heap (`configTOTAL_HEAP_SIZE`) is currently set to 8192 bytes (8 KB): this accounts for most of the RAM usage (5 tasks × stack + 3 queues + kernel overhead). It can be increased substantially before hitting the 96 KB ceiling.
+> With 1.8% flash utilization in the application, there is enormous room to grow. The FreeRTOS heap (`configTOTAL_HEAP_SIZE`) is currently set to 8192 bytes (8 KB): this accounts for most of the RAM usage (5 tasks  stack + 3 queues + kernel overhead). It can be increased substantially before hitting the 96 KB ceiling.
 
 ### RAM Breakdown (Approximate)
 
 | Component | RAM Used |
 |---|---|
 | FreeRTOS kernel + scheduler | ~1,200 bytes |
-| Task stacks (all 5 tasks) | ~4,608 bytes (128+512+256+128+256 words × 4) |
+| Task stacks (all 5 tasks) | ~4,608 bytes (128+512+256+128+256 words  4) |
 | Queue storage (3 queues) | ~384 bytes |
 | HAL + peripheral drivers | ~1,800 bytes |
 | Global variables + BSS | ~2,888 bytes |
@@ -358,4 +358,4 @@ Memory utilization is tracked per-build using the PlatformIO build output. The f
 
 ---
 
-> **Navigation**: [← Back to README](../README.md) | [Hardware Wiring →](02_hardware_wiring.md) | [Bootloader →](03_bootloader.md) | [FreeRTOS App →](04_freertos_app.md)
+> **Navigation**: [ Back to README](../README.md) | [Hardware Wiring ](02_hardware_wiring.md) | [Bootloader ](03_bootloader.md) | [FreeRTOS App ](04_freertos_app.md)

@@ -12,7 +12,7 @@
 4. [CRC-16/CCITT: The XMODEM Checksum](#4-crc-16ccitt--the-xmodem-checksum)
 5. [OTA Transfer Flow](#5-ota-transfer-flow)
 6. [Flash Programming on STM32L476](#6-flash-programming-on-stm32l476)
-7. [🐛 The Bug That Almost Broke OTA: Unaligned Memory Access](#-the-bug-that-almost-broke-ota-unaligned-memory-access)
+7. [ The Bug That Almost Broke OTA: Unaligned Memory Access](#-the-bug-that-almost-broke-ota-unaligned-memory-access)
 8. [Step-by-Step OTA Guide (Tera Term)](#8-step-by-step-ota-guide-tera-term)
 9. [What Happens If Power Fails Mid-Update?](#9-what-happens-if-power-fails-mid-update)
 
@@ -66,20 +66,20 @@ XMODEM's 47-year track record and zero-software-requirement on the host side mak
 XMODEM transmits data in fixed-size frames called packets. Each packet is exactly **133 bytes** in the XMODEM-CRC variant (the variant we use: classic XMODEM uses a 1-byte checksum instead of 2-byte CRC):
 
 ```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                         XMODEM-CRC Packet (133 bytes total)                           │
-├──────────┬───────────┬───────────┬──────────────────────────────┬──────────┬──────────┤
-│  Byte 0  │  Byte 1   │  Byte 2   │      Bytes 3: 130           │  Byte 131│  Byte 132│
-│          │           │           │                              │          │          │
-│  SOH     │  PKT_NUM  │ ~PKT_NUM  │      128 bytes of DATA       │ CRC_HIGH │  CRC_LOW │
-│  0x01    │ (1, 2, …) │ (0xFF-N)  │      (payload)               │          │          │
-│  1 byte  │  1 byte   │  1 byte   │      128 bytes               │  1 byte  │  1 byte  │
-└──────────┴───────────┴───────────┴──────────────────────────────┴──────────┴──────────┘
-     ↑           ↑           ↑                                          ↑
+
+                         XMODEM-CRC Packet (133 bytes total)                           
+
+  Byte 0    Byte 1     Byte 2         Bytes 3: 130             Byte 131  Byte 132
+                                                                                  
+  SOH       PKT_NUM   ~PKT_NUM        128 bytes of DATA        CRC_HIGH   CRC_LOW 
+  0x01     (1, 2, )  (0xFF-N)        (payload)                                   
+  1 byte    1 byte     1 byte         128 bytes                 1 byte    1 byte  
+
+                                                                     
   Start of    Packet     One's complement                           16-bit CRC over
   Header    number       of packet number                           128 data bytes only
   byte      (wraps       (integrity check                          (not the header bytes)
-            at 255→0)    for packet num)
+            at 2550)    for packet num)
 ```
 
 **Field descriptions:**
@@ -87,7 +87,7 @@ XMODEM transmits data in fixed-size frames called packets. Each packet is exactl
 | Field | Size | Value | Purpose |
 |---|---|---|---|
 | `SOH` | 1 byte | `0x01` | Start Of Header: marks beginning of a packet (vs `EOT`=end, `CAN`=cancel) |
-| `PKT_NUM` | 1 byte | 1, 2, 3, … 255, 0, 1, … | Packet sequence number, wraps around at 255 |
+| `PKT_NUM` | 1 byte | 1, 2, 3,  255, 0, 1,  | Packet sequence number, wraps around at 255 |
 | `~PKT_NUM` | 1 byte | `0xFF - PKT_NUM` | One's complement of packet number: receiver can detect header corruption |
 | `DATA` | 128 bytes | Firmware bytes | 128 bytes of the firmware binary. Last packet zero-padded if needed. |
 | `CRC_HIGH` | 1 byte | CRC[15:8] | Most significant byte of 16-bit CRC |
@@ -96,10 +96,10 @@ XMODEM transmits data in fixed-size frames called packets. Each packet is exactl
 **Control bytes (not packets):**
 
 ```
-Receiver → Sender:  'C' (0x43) : "I want XMODEM-CRC, send me data"
-Receiver → Sender:  ACK (0x06) : "Packet received OK, send next"
-Receiver → Sender:  NAK (0x15) : "Packet bad, resend it"
-Sender   → Receiver: EOT (0x04): "All data sent, transfer complete"
+Receiver  Sender:  'C' (0x43) : "I want XMODEM-CRC, send me data"
+Receiver  Sender:  ACK (0x06) : "Packet received OK, send next"
+Receiver  Sender:  NAK (0x15) : "Packet bad, resend it"
+Sender    Receiver: EOT (0x04): "All data sent, transfer complete"
 Either side:        CAN (0x18) : "Cancel the transfer" (sent twice)
 ```
 
@@ -161,8 +161,8 @@ The bootloader calls this function on each received packet's 128 data bytes and 
 
 ```mermaid
 sequenceDiagram
-    participant PC as 💻 PC (Tera Term)
-    participant BL as 🔒 Bootloader (STM32)
+    participant PC as  PC (Tera Term)
+    participant BL as  Bootloader (STM32)
 
     Note over BL: PB10 held at reset OR CRC failed
     BL->>BL: Erase flash pages 16:255
@@ -172,7 +172,7 @@ sequenceDiagram
         BL-->>PC: 'C' (0x43): "Ready for XMODEM-CRC"
     end
 
-    Note over PC: User selects File → Transfer → XMODEM → Send
+    Note over PC: User selects File  Transfer  XMODEM  Send
 
     loop For each 128-byte chunk of firmware
         PC->>BL: SOH | PKT_NUM | ~PKT_NUM | [128 bytes] | CRC_H | CRC_L
@@ -182,7 +182,7 @@ sequenceDiagram
         BL->>BL: Compare computed CRC vs received CRC
 
         alt CRC matches
-            BL->>BL: memcpy data → buffer, HAL_FLASH_Program (64-bit writes)
+            BL->>BL: memcpy data  buffer, HAL_FLASH_Program (64-bit writes)
             BL-->>PC: ACK (0x06)
         else CRC mismatch
             BL-->>PC: NAK (0x15)
@@ -195,7 +195,7 @@ sequenceDiagram
     BL-->>PC: "[OTA] Update Successfully Flashed! Rebooting..."
     BL->>BL: HAL_NVIC_SystemReset()
 
-    Note over BL: Reboot → verify CRC32 → jump to new app
+    Note over BL: Reboot  verify CRC32  jump to new app
 ```
 
 **State machine inside the bootloader:**
@@ -254,10 +254,10 @@ void xmodem_receive(void)
             continue;
         }
 
-        // CRC OK: write 128 bytes to flash (see §6 for the bug that happened here)
+        // CRC OK: write 128 bytes to flash (see 6 for the bug that happened here)
         flash_write_128_bytes(flash_addr, &packet[3]);
         flash_addr += 128;
-        expected_pkt++;   // Wraps 255 → 0 automatically (uint8_t overflow)
+        expected_pkt++;   // Wraps 255  0 automatically (uint8_t overflow)
 
         uart_send_byte(ACK);
     }
@@ -280,7 +280,7 @@ STM32L476 Flash organization:
   Page size: 2 KB = 2,048 bytes
 
 Our app lives at pages 16:255 (pages 0:15 = bootloader):
-  Erase range: pages 16:255 = 240 pages × 2 KB = 480 KB for app
+  Erase range: pages 16:255 = 240 pages  2 KB = 480 KB for app
 ```
 
 Before writing, the bootloader erases all app pages. Erasing is done page-by-page using `HAL_FLASHEx_Erase()`. An erased page reads as `0xFFFFFFFFFFFFFFFF` (all ones). You cannot write a `0` bit back to `1` without erasing: you can only write `1` bits down to `0`.
@@ -306,7 +306,7 @@ The STM32L476 flash controller **only supports 64-bit (8-byte) double-word write
 
 ```c
 /**
- * @brief  Write 128 bytes (16 × 8-byte double-words) to flash.
+ * @brief  Write 128 bytes (16  8-byte double-words) to flash.
  * @param  flash_addr  Destination address: must be 8-byte aligned.
  * @param  data        Source data: 128 bytes from XMODEM packet.
  */
@@ -315,7 +315,7 @@ static void flash_write_128_bytes(uint32_t flash_addr, const uint8_t *data)
     for (int i = 0; i < 128; i += 8) {
         uint64_t double_word;
 
-        // ⚠️ CRITICAL: use memcpy, NOT a pointer cast (see §7 for the bug)
+        //  CRITICAL: use memcpy, NOT a pointer cast (see 7 for the bug)
         memcpy(&double_word, &data[i], 8);
 
         // HAL_FLASH_Program for double-word: writes 8 bytes at flash_addr
@@ -335,7 +335,7 @@ static void flash_write_128_bytes(uint32_t flash_addr, const uint8_t *data)
 
 ---
 
-## 🐛 The Bug That Almost Broke OTA: Unaligned Memory Access
+##  The Bug That Almost Broke OTA: Unaligned Memory Access
 
 This is the most instructive bug in the entire project. It cost hours of debugging time and the fix was one word. Understanding it deeply is the mark of an embedded engineer who truly understands the hardware.
 
@@ -346,11 +346,11 @@ After implementing the XMODEM receiver, the first test showed Tera Term's progre
 ```
 [OTA] Erasing Flash Memory... done.
 [OTA] Waiting for XMODEM...
-CCCCCC                              ← bootloader sending 'C' repeatedly
+CCCCCC                               bootloader sending 'C' repeatedly
 [receiving packet #1...]
-                                    ← ACK sent, but then... nothing
-                                    ← Tera Term shows: Packet# = 1 (frozen)
-                                    ← Progress: 0.6% (frozen)
+                                     ACK sent, but then... nothing
+                                     Tera Term shows: Packet# = 1 (frozen)
+                                     Progress: 0.6% (frozen)
 ```
 
 Tera Term showed it sent packet #2 and was waiting for ACK: but the ACK never came. The bootloader appeared to have entered a catatonic state.
@@ -428,10 +428,10 @@ The lesson: **never dereference a typed pointer whose alignment you cannot guara
 The rule for embedded code:
 
 ```c
-// ❌ UNSAFE: assumes source is aligned to sizeof(T)
+//  UNSAFE: assumes source is aligned to sizeof(T)
 T value = *(T*)arbitrary_pointer;
 
-// ✅ SAFE: memcpy handles any source alignment
+//  SAFE: memcpy handles any source alignment
 T value;
 memcpy(&value, arbitrary_pointer, sizeof(T));
 ```
@@ -456,10 +456,10 @@ Follow these steps exactly to perform a firmware update. Total time: approximate
 **Step 1: Enter bootloader OTA mode:**
 
 ```
-① Hold down the external breadboard button (PB10): keep it pressed
-② Press and release the Nucleo RESET button (black button on board)
-③ Keep PB10 held for ~1 more second
-④ Release PB10
+ Hold down the external breadboard button (PB10): keep it pressed
+ Press and release the Nucleo RESET button (black button on board)
+ Keep PB10 held for ~1 more second
+ Release PB10
 ```
 
 The bootloader reads PB10 on startup. Holding it during reset signals "force OTA mode."
@@ -467,17 +467,17 @@ The bootloader reads PB10 on startup. Holding it during reset signals "force OTA
 **Step 2: Open Tera Term and connect:**
 
 ```
-① Open Tera Term
-② File → New Connection
-③ Select: Serial
-④ Port: your STM32 COM port (check Device Manager → Ports → STMicroelectronics STLink Virtual COM Port)
-⑤ Click OK
+ Open Tera Term
+ File  New Connection
+ Select: Serial
+ Port: your STM32 COM port (check Device Manager  Ports  STMicroelectronics STLink Virtual COM Port)
+ Click OK
 ```
 
 **Step 3: Configure the serial port:**
 
 ```
-Setup → Serial Port:
+Setup  Serial Port:
   Speed:    115200
   Data:     8 bit
   Parity:   None
@@ -507,7 +507,7 @@ The `CCCCC...` output means the bootloader is actively sending the XMODEM-CRC in
 **Step 5: Start the XMODEM transfer:**
 
 ```
-File → Transfer → XMODEM → Send...
+File  Transfer  XMODEM  Send...
 ```
 
 In the file picker that opens, navigate to your firmware `.bin` file. It will be in:
@@ -527,7 +527,7 @@ File: firmware.bin
 Packet#: 47
 File Size: 85632 bytes
 Transferred: 6016 / 85632 bytes (7%)
-[████████░░░░░░░░░░░░░░░░░░░░░░░░]
+[]
 ```
 
 Packet numbers increment every ~133 bytes. Transfer speed at 115200 baud is approximately 10 KB/s, so a 100 KB image takes about 10:15 seconds.
@@ -568,7 +568,7 @@ This is an important question that every bootloader designer must answer honestl
 | **Before erase starts** | Old (valid) app still in flash | Normal boot, old app runs. Update never started. |
 | **During erase** | Pages partially erased: some pages `0xFF`, some still have old code | CRC fails (image is garbage). Bootloader enters OTA mode. Ready for new update. |
 | **During write** | Partial new app: some pages written, some erased but empty | CRC fails (incomplete image). Bootloader enters OTA mode. Ready for new update. |
-| **After write, before reboot** | Complete new app in flash (CRC injected by build) | Normal boot on next power-on. Bootloader verifies CRC, jumps to new app. ✓ |
+| **After write, before reboot** | Complete new app in flash (CRC injected by build) | Normal boot on next power-on. Bootloader verifies CRC, jumps to new app.  |
 
 **The critical safety property:**
 
@@ -578,13 +578,13 @@ Because the bootloader erases the application flash *before* writing the new ima
 
 ```
 Power failure during update
-    → Next boot: bootloader starts
-    → Reads AppHeader: magic might be 0xFF (erased) or corrupted
-    → CRC fails (or magic fails before CRC is even checked)
-    → Falls into OTA mode
-    → Sends 'C' every second, waiting for rescue firmware
-    → Connect Tera Term, send valid firmware
-    → Device recovered ✓
+     Next boot: bootloader starts
+     Reads AppHeader: magic might be 0xFF (erased) or corrupted
+     CRC fails (or magic fails before CRC is even checked)
+     Falls into OTA mode
+     Sends 'C' every second, waiting for rescue firmware
+     Connect Tera Term, send valid firmware
+     Device recovered 
 ```
 
 > [!NOTE]
@@ -592,4 +592,4 @@ Power failure during update
 
 ---
 
-*← [06: Sensors & EXTI](06_sensors_exti.md) | [08: CLI & UART Terminal](08_cli_uart.md) →*
+* [06: Sensors & EXTI](06_sensors_exti.md) | [08: CLI & UART Terminal](08_cli_uart.md) *

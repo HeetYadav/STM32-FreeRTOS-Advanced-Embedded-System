@@ -32,7 +32,7 @@ The bootloader uses almost no RAM: it runs entirely from the stack with no heap 
 |-----------|----------------|-------|
 | FreeRTOS kernel | ~3,200 bytes | Scheduler, list structures, timers |
 | Task stacks (5 tasks) | ~4,096 bytes | See per-task table below |
-| Queue storage | ~640 bytes | 3 queues × message size × depth |
+| Queue storage | ~640 bytes | 3 queues  message size  depth |
 | Global variables | ~200 bytes | Handles, flags, sensor state |
 | HAL peripheral handles | ~300 bytes | UART, TIM1/2/3 HandleTypeDef structs |
 | C runtime / startup | ~644 bytes | .data + .bss |
@@ -46,11 +46,11 @@ Stack sizes are defined at task creation (`xTaskCreate`). High-water mark is the
 
 | Task | Stack Allocated | Measured High-Water Mark* | Peak Usage | Safe? |
 |------|-----------------|--------------------------|------------|-------|
-| `HeartbeatTask` | 128 words (512 bytes) | ~100 words remaining | ~28 words | ✅ Yes |
-| `ButtonMonitorTask` | 256 words (1,024 bytes) | ~210 words remaining | ~46 words | ✅ Yes |
-| `TerminalTask` | 512 words (2,048 bytes) | ~380 words remaining | ~132 words | ✅ Yes |
-| `SensorTask` | 256 words (1,024 bytes) | ~190 words remaining | ~66 words | ✅ Yes |
-| `LEDControllerTask` | 512 words (2,048 bytes) | ~420 words remaining | ~92 words | ✅ Yes |
+| `HeartbeatTask` | 128 words (512 bytes) | ~100 words remaining | ~28 words |  Yes |
+| `ButtonMonitorTask` | 256 words (1,024 bytes) | ~210 words remaining | ~46 words |  Yes |
+| `TerminalTask` | 512 words (2,048 bytes) | ~380 words remaining | ~132 words |  Yes |
+| `SensorTask` | 256 words (1,024 bytes) | ~190 words remaining | ~66 words |  Yes |
+| `LEDControllerTask` | 512 words (2,048 bytes) | ~420 words remaining | ~92 words |  Yes |
 
 *\*High-water marks are estimates based on code analysis. To measure exactly, add `uxTaskGetStackHighWaterMark(NULL)` to each task and print via `status` command.*
 
@@ -77,16 +77,16 @@ The most time-critical path in the system is the EXTI interrupt on PB6 (HC-SR04 
 
 | Stage | Time | Notes |
 |-------|------|-------|
-| ECHO pin goes HIGH | 0 µs | Reference |
+| ECHO pin goes HIGH | 0 s | Reference |
 | Cortex-M4 IRQ response | ~100:200 ns | From pin change to ISR entry (12 cycles at 80MHz) |
 | `TIM5->CNT` captured | ~12:14 cycles | ~150:175 ns after IRQ |
-| Total latency | **< 400 ns** | Well under 1 µs TIM5 resolution |
-| TIM5 tick resolution | 1 µs | PSC=79, SYSCLK=80MHz |
+| Total latency | **< 400 ns** | Well under 1 s TIM5 resolution |
+| TIM5 tick resolution | 1 s | PSC=79, SYSCLK=80MHz |
 
-**Accuracy implication**: At the speed of sound (343 m/s), 1 µs of timing error corresponds to **0.017mm** of distance error. The overall HC-SR04 accuracy (±3mm datasheet) is dominated by acoustic beam spread, not our timing.
+**Accuracy implication**: At the speed of sound (343 m/s), 1 s of timing error corresponds to **0.017mm** of distance error. The overall HC-SR04 accuracy (3mm datasheet) is dominated by acoustic beam spread, not our timing.
 
 ### FreeRTOS interrupt overhead
-The EXTI ISR calls `xQueueSendFromISR` which may trigger `portYIELD_FROM_ISR`. A context switch on Cortex-M4 takes approximately 10:15 µs via PendSV. This does **not** affect the timing capture since `TIM5->CNT` is read before the queue send.
+The EXTI ISR calls `xQueueSendFromISR` which may trigger `portYIELD_FROM_ISR`. A context switch on Cortex-M4 takes approximately 10:15 s via PendSV. This does **not** affect the timing capture since `TIM5->CNT` is read before the queue send.
 
 ---
 
@@ -96,14 +96,14 @@ This is a rough estimate based on task periods and worst-case execution times.
 
 | Task | Period | Worst Case Execution | CPU Contribution |
 |------|--------|---------------------|-----------------|
-| `HeartbeatTask` | 1000 ms | ~10 µs | **< 0.01%** |
-| `ButtonMonitorTask` | 50 ms | ~50 µs | **0.1%** |
-| `TerminalTask` | Event-driven | ~500 µs/command | **< 0.1%** (idle most of time) |
-| `SensorTask` | 500 ms | ~200 µs | **0.04%** |
-| `LEDControllerTask` | Event-driven | ~50 µs/update | **~0.1%** |
-| FreeRTOS scheduler | Per tick (1ms) | ~5 µs | **0.5%** |
-| EXTI ISR (HC-SR04) | Every 500 ms | ~2 µs | **< 0.01%** |
-| USART1 ISR | Per character | ~1 µs | **< 0.01%** |
+| `HeartbeatTask` | 1000 ms | ~10 s | **< 0.01%** |
+| `ButtonMonitorTask` | 50 ms | ~50 s | **0.1%** |
+| `TerminalTask` | Event-driven | ~500 s/command | **< 0.1%** (idle most of time) |
+| `SensorTask` | 500 ms | ~200 s | **0.04%** |
+| `LEDControllerTask` | Event-driven | ~50 s/update | **~0.1%** |
+| FreeRTOS scheduler | Per tick (1ms) | ~5 s | **0.5%** |
+| EXTI ISR (HC-SR04) | Every 500 ms | ~2 s | **< 0.01%** |
+| USART1 ISR | Per character | ~1 s | **< 0.01%** |
 | **Total estimated** |: |: | **< 1%** |
 
 The CPU is sleeping (in `__WFI` via FreeRTOS Idle Task) for approximately **99% of the time**. This is exactly the correct design for a sensor-driven embedded system.
@@ -114,8 +114,8 @@ The CPU is sleeping (in `__WFI` via FreeRTOS Idle Task) for approximately **99% 
 
 | Queue | Depth | Message Size | Max Queuing Latency |
 |-------|-------|--------------|---------------------|
-| `xRXQueue` | 64 chars | 1 byte | ~640 µs at 115200 baud before overflow |
-| `xSensorQueue` | 10 msgs | 8 bytes | 10 × 500ms = 5 seconds backlog |
+| `xRXQueue` | 64 chars | 1 byte | ~640 s at 115200 baud before overflow |
+| `xSensorQueue` | 10 msgs | 8 bytes | 10  500ms = 5 seconds backlog |
 | `xLEDQueue` | 10 msgs | 8 bytes | Effectively instant (LEDController runs continuously) |
 
 `xRXQueue` depth of 64 is chosen to buffer a full typed line without overflow even if `TerminalTask` is briefly preempted.
@@ -133,4 +133,4 @@ The CPU is sleeping (in `__WFI` via FreeRTOS Idle Task) for approximately **99% 
 
 ---
 
-*← [CLI Terminal](08_cli_terminal.md)* | *[Troubleshooting →](10_troubleshooting.md)* | *[Back to docs index](00_index.md)*
+* [CLI Terminal](08_cli_terminal.md)* | *[Troubleshooting ](10_troubleshooting.md)* | *[Back to docs index](00_index.md)*

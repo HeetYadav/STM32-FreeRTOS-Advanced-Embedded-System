@@ -50,15 +50,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### LED Control
 - **Hardware PWM LED bar graph** on 4 LEDs driven by three independent timers:
-  - TIM3_CH1 → PB4 (LED1, nearest)
-  - TIM3_CH2 → PB5 (LED2)
-  - TIM2_CH2 → PB3 (LED3)
-  - TIM1_CH1 → PA8 (LED4, farthest)
+  - TIM3_CH1  PB4 (LED1, nearest)
+  - TIM3_CH2  PB5 (LED2)
+  - TIM2_CH2  PB3 (LED3)
+  - TIM1_CH1  PA8 (LED4, farthest)
   - All channels: 1kHz frequency, 1000-step CCR resolution.
 - **Distance-to-brightness cascade mapping**:
-  - >30cm → all LEDs OFF
-  - 30cm to 5cm → smooth proportional fade, LED4 lights first (farthest = soonest warning)
-  - ≤5cm → all 4 LEDs at 100% brightness
+  - >30cm  all LEDs OFF
+  - 30cm to 5cm  smooth proportional fade, LED4 lights first (farthest = soonest warning)
+  - 5cm  all 4 LEDs at 100% brightness
 - **IR priority override**: when the HW-201 IR sensor detects an object, all 4 LEDs blink synchronously at 100% duty cycle, overriding the ultrasonic bar graph: IR proximity takes precedence.
 
 #### Serial CLI
@@ -76,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-#### 🐛 CRITICAL: XMODEM Transfer Stuck at 128 Bytes (0.6%)
+####  CRITICAL: XMODEM Transfer Stuck at 128 Bytes (0.6%)
 
 - **Symptom**: XMODEM firmware transfer via Tera Term stalled permanently after receiving exactly one 128-byte packet (0.6% progress). The STM32 appeared to lock up; only a hard reset recovered it.
 - **Root Cause**: The bootloader's flash write loop cast unaligned packet data to a 64-bit pointer: `*(uint64_t*)(&packet[3 + i])`. The XMODEM packet layout places the data payload at byte offset 3 (after SOH, block number, complement), meaning `&packet[3]` is never 8-byte aligned. The ARM Cortex-M4, by default, generates a **HardFault** on unaligned 64-bit (`LDRD`/`STRD`) memory accesses: killing the bootloader silently before the second packet could be ACK'd.
@@ -86,17 +86,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-#### 🐛 HC-SR04 Constant 4cm Reading
+####  HC-SR04 Constant 4cm Reading
 
 - **Symptom**: The HC-SR04 distance sensor reported approximately 4cm regardless of actual target distance. Waving a hand in front of the sensor produced no change in the reading.
-- **Root Cause**: TIM5 was configured with a prescaler value to achieve 1MHz tick rate, but the prescaler shadow register was **never loaded** because the Update Generation bit (`TIM_EGR_UG`) was not written after configuration. The TIM5 counter ran at the default post-reset prescaler (÷1), making it tick at the full 80MHz APB clock: causing the echo pulse width to compute as a tiny number, always corresponding to ~4cm.
+- **Root Cause**: TIM5 was configured with a prescaler value to achieve 1MHz tick rate, but the prescaler shadow register was **never loaded** because the Update Generation bit (`TIM_EGR_UG`) was not written after configuration. The TIM5 counter ran at the default post-reset prescaler (1), making it tick at the full 80MHz APB clock: causing the echo pulse width to compute as a tiny number, always corresponding to ~4cm.
 - **Fix**: Added `TIM5->EGR = TIM_EGR_UG;` immediately after writing `TIM5->PSC`. This forces an update event, which transfers the shadow register value into the active prescaler register.
 - **Lesson**: On STM32 timers, `PSC` (and `ARR`) writes go into **shadow registers** and only take effect on the next update event. After configuring a timer prescaler at runtime, always generate a software update event via `EGR |= TIM_EGR_UG` to make the setting active immediately.
 - *(Commit: `fix: add TIM5 EGR update event after prescaler config to correct HC-SR04 timing`)*
 
 ---
 
-#### 🐛 TIM2 Resource Conflict: Ultrasonic Timing vs. LED3 PWM
+####  TIM2 Resource Conflict: Ultrasonic Timing vs. LED3 PWM
 
 - **Symptom**: When LED3 PWM (PB3, TIM2_CH2) was enabled, the HC-SR04 echo timing became erratic: readings jumped between correct values and garbage. When LED3 was disabled, HC-SR04 worked correctly.
 - **Root Cause**: TIM2 was being used simultaneously as the microsecond stopwatch for HC-SR04 echo measurement **and** as the PWM source for LED3 (PB3 = TIM2_CH2, AF1). Writing the PWM `CCR2` register and reconfiguring TIM2 channel modes for LED output conflicted with the ongoing timer reads used for echo timing. The same timer peripheral cannot serve two independent timing roles concurrently.
@@ -106,7 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-#### 🐛 Bootloader Jump Instability: Interrupt Vector Corruption After Boot
+####  Bootloader Jump Instability: Interrupt Vector Corruption After Boot
 
 - **Symptom**: After the bootloader jumped to the application, the firmware appeared to run briefly (HeartbeatTask LED blinked once or twice) then crashed: USART1 produced garbage or nothing, and the board required a hard reset.
 - **Root Cause**: The bootloader did not update the **Vector Table Offset Register (`SCB->VTOR`)** before jumping. After reset, VTOR points to `0x08000000` (bootloader vectors). When the application ran and an interrupt fired (SysTick, UART, EXTI), the CPU fetched the handler address from the bootloader's vector table: jumping into the bootloader's ISR code with the application's stack and state, immediately corrupting execution.

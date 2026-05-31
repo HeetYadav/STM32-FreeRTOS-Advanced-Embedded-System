@@ -21,16 +21,16 @@
 
 Think of a bootloader as the **BIOS/UEFI of a microcontroller**. When you power on a PC, it doesn't immediately run Windows: first, the BIOS wakes up, checks hardware, finds the operating system, and hands control over. A microcontroller bootloader works the same way:
 
-1. **Power on** → CPU starts executing from a fixed reset address (`0x08000000` on STM32)
-2. **Bootloader runs first** → checks conditions (update requested? image valid?)
-3. **Decision point** → either launch the main application, or enter firmware-update mode
-4. **Hand off** → transfers execution to the application
+1. **Power on**  CPU starts executing from a fixed reset address (`0x08000000` on STM32)
+2. **Bootloader runs first**  checks conditions (update requested? image valid?)
+3. **Decision point**  either launch the main application, or enter firmware-update mode
+4. **Hand off**  transfers execution to the application
 
 **Why is this valuable?**
 
 | Without a Bootloader | With a Bootloader |
 |---|---|
-| Firmware updates require a physical ST-Link debug probe | Updates can happen over any communication link (UART, USB, CAN, Wi-Fi…) |
+| Firmware updates require a physical ST-Link debug probe | Updates can happen over any communication link (UART, USB, CAN, Wi-Fi) |
 | A corrupted flash image bricks the device | A bad image is rejected; the bootloader stays alive to accept a fix |
 | No integrity checking: any binary runs | CRC32 verification ensures the image wasn't corrupted in transit |
 | One monolithic firmware: no separation of concerns | Clean separation: bootloader is stable, app can be iterated independently |
@@ -52,17 +52,17 @@ Page Size:  2 KB (0x800 bytes)
 block-beta
   columns 1
 
-  block:BOOT["🔒 SecureBootloader_L476"]:1
+  block:BOOT[" SecureBootloader_L476"]:1
     B["Pages 0:15  |  0x08000000: 0x08007FFF  |  32 KB\nBootloader code, ISR vectors, XMODEM receiver"]
   end
 
-  block:APP["⚙️ FreeRTOS_App_L476"]:1
+  block:APP[" FreeRTOS_App_L476"]:1
     V["Page 16     |  0x08008000: 0x080081FF  |  512 B\nApp interrupt vector table (IVT)"]
     H["Offset 0x188 |  0x08008188               |  16 B\nAppHeader struct (magic, CRC32, length, version)"]
     C["Pages 17:255 | 0x08008200: 0x080FFFFF  |  ~992 KB\nApp code, data, rodata, BSS init table"]
   end
 
-  block:FREE["🆓 Available"]:1
+  block:FREE[" Available"]:1
     F["Pages 256:511 | 0x08100000: 0x080FFFFF | 512 KB\nUnused: available for data logging, config storage, etc."]
   end
 
@@ -76,11 +76,11 @@ block-beta
 
 **Why 0x08008000 for the app?**
 
-The STM32L476 flash page size is 2 KB. We reserved 16 pages (16 × 2 KB = 32 KB) for the bootloader, landing the app neatly at the start of page 16, address `0x08008000`. This alignment is mandatory: the app's interrupt vector table must start on a 512-byte boundary for the Cortex-M4 VTOR (Vector Table Offset Register).
+The STM32L476 flash page size is 2 KB. We reserved 16 pages (16  2 KB = 32 KB) for the bootloader, landing the app neatly at the start of page 16, address `0x08008000`. This alignment is mandatory: the app's interrupt vector table must start on a 512-byte boundary for the Cortex-M4 VTOR (Vector Table Offset Register).
 
 **Why 0x08008188 for AppHeader?**
 
-The Cortex-M4 IVT contains 98 vectors (98 × 4 bytes = 392 bytes = `0x188` bytes). So the IVT occupies `0x08008000`:`0x08008187`. The very next byte, `0x08008188`, is the first free location after the vector table: the ideal place to embed metadata about the image without wasting flash or requiring linker script gymnastics.
+The Cortex-M4 IVT contains 98 vectors (98  4 bytes = 392 bytes = `0x188` bytes). So the IVT occupies `0x08008000`:`0x08008187`. The very next byte, `0x08008188`, is the first free location after the vector table: the ideal place to embed metadata about the image without wasting flash or requiring linker script gymnastics.
 
 ---
 
@@ -119,7 +119,7 @@ typedef struct __attribute__((packed)) {
 | Field | Value | Purpose |
 |---|---|---|
 | `magic_number` | `0xAA55AA55` | A "magic number": any valid app image must start with this exact 32-bit signature. Without it, the bootloader refuses to jump. Catches the case where flash was erased and nothing was written. |
-| `crc32` | `0xFFFFFFFF` → patched | Placeholder set to `0xFFFFFFFF` in the C source. Post-build, `inject_crc.py` overwrites this with the real CRC. The bootloader reads and verifies this field. |
+| `crc32` | `0xFFFFFFFF`  patched | Placeholder set to `0xFFFFFFFF` in the C source. Post-build, `inject_crc.py` overwrites this with the real CRC. The bootloader reads and verifies this field. |
 | `image_length` | Set by `inject_crc.py` | The exact size of the `.bin` file in bytes. Bootloader uses this to know how many bytes to feed into the CRC peripheral: no guessing, no over-reading. |
 | `version` | e.g. `0x00010002` | Human-readable firmware version. Stored as `(major << 16) | minor`. Displayed on the UART CLI via `status` command. Useful for confirming a successful update. |
 
@@ -200,19 +200,19 @@ After PlatformIO compiles and links the application, it produces a `.bin` file (
 `inject_crc.py` runs as a **PlatformIO post-build script** (configured in `extra_scripts` in `platformio.ini`) and performs this sequence:
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      inject_crc.py Workflow                         │
-├─────────────────────────────────────────────────────────────────────┤
-│  1. Read entire .bin file into a bytearray                          │
-│  2. Patch bytes [0x18C:0x190] = b'\xFF\xFF\xFF\xFF'  (already so)  │
-│  3. Compute CRC32 over all bytes (placeholder in place)             │
-│     using Python: crc = binascii.crc32(data) & 0xFFFFFFFF          │
-│  4. Pack CRC as 4 little-endian bytes                               │
-│  5. Write those 4 bytes back to [0x18C:0x190] in the bytearray     │
-│  6. Also write image_length = len(data) to [0x190:0x194]           │
-│  7. Save modified bytearray as the final .bin                       │
-│  8. Print: "[CRC] Injected CRC32=0xXXXXXXXX, length=NNNN bytes"   │
-└─────────────────────────────────────────────────────────────────────┘
+
+                      inject_crc.py Workflow                         
+
+  1. Read entire .bin file into a bytearray                          
+  2. Patch bytes [0x18C:0x190] = b'\xFF\xFF\xFF\xFF'  (already so)  
+  3. Compute CRC32 over all bytes (placeholder in place)             
+     using Python: crc = binascii.crc32(data) & 0xFFFFFFFF          
+  4. Pack CRC as 4 little-endian bytes                               
+  5. Write those 4 bytes back to [0x18C:0x190] in the bytearray     
+  6. Also write image_length = len(data) to [0x190:0x194]           
+  7. Save modified bytearray as the final .bin                       
+  8. Print: "[CRC] Injected CRC32=0xXXXXXXXX, length=NNNN bytes"   
+
 ```
 
 ```python
@@ -243,7 +243,7 @@ def inject_crc(bin_path):
     with open(bin_path, 'wb') as f:
         f.write(data)
 
-    print(f"[CRC Injector] CRC32=0x{crc:08X}, length={len(data)} bytes → patched into {bin_path}")
+    print(f"[CRC Injector] CRC32=0x{crc:08X}, length={len(data)} bytes  patched into {bin_path}")
 
 if __name__ == "__main__":
     inject_crc(sys.argv[1])
@@ -258,8 +258,8 @@ When the board boots, the bootloader performs the **exact same calculation** on 
 This creates a robust feedback loop:
 
 ```
-Build → inject_crc.py patches CRC → XMODEM transfers image → Bootloader reads, recalculates → Match → Jump ✓
-                                                                                              → Mismatch → OTA mode ✗
+Build  inject_crc.py patches CRC  XMODEM transfers image  Bootloader reads, recalculates  Match  Jump 
+                                                                                               Mismatch  OTA mode 
 ```
 
 ---
@@ -280,14 +280,14 @@ Here is the complete jump sequence with explanation:
  */
 static void jump_to_application(void)
 {
-    /* ── Step 1: Disable all HAL-managed peripherals ───────────────────────
+    /*  Step 1: Disable all HAL-managed peripherals 
      * HAL_DeInit() resets all HAL state machines (flags, handles, callbacks).
      * Without this, the app's HAL_Init() may skip re-initialization because
      * HAL thinks the peripheral is already set up (it remembers the state).
      */
     HAL_DeInit();
 
-    /* ── Step 2: Reset all RCC clock gates ─────────────────────────────────
+    /*  Step 2: Reset all RCC clock gates 
      * Turns off all peripheral clocks enabled by the bootloader.
      * The app will re-enable only what it needs. Leaving clocks on wastes
      * power and can cause the app's clock init to behave unexpectedly.
@@ -297,7 +297,7 @@ static void jump_to_application(void)
     __HAL_RCC_APB2_FORCE_RESET();
     __HAL_RCC_APB2_RELEASE_RESET();
 
-    /* ── Step 3: Disable and clear SysTick ─────────────────────────────────
+    /*  Step 3: Disable and clear SysTick 
      * SysTick is the Cortex-M4's system timer: FreeRTOS uses it for task
      * scheduling. If we don't clear it here, it keeps firing the bootloader's
      * SysTick_Handler (which is at the wrong vector table address for the app).
@@ -307,14 +307,14 @@ static void jump_to_application(void)
     SysTick->LOAD = 0;
     SysTick->VAL  = 0;
 
-    /* ── Step 4: Disable all interrupts ────────────────────────────────────
+    /*  Step 4: Disable all interrupts 
      * Prevents any pending IRQ from firing in the window between here and the
      * jump. A stray interrupt at this point would call a bootloader handler
      * at an address that no longer makes sense for the app context.
      */
     __disable_irq();
 
-    /* ── Step 5: Set the Vector Table Offset Register (VTOR) ───────────────
+    /*  Step 5: Set the Vector Table Offset Register (VTOR) 
      * The Cortex-M4 VTOR tells the CPU WHERE the interrupt vector table lives.
      * Default after reset: 0x08000000 (bootloader's vectors).
      * We must point it to 0x08008000 (app's vectors) BEFORE the jump,
@@ -326,7 +326,7 @@ static void jump_to_application(void)
      */
     SCB->VTOR = 0x08008000;
 
-    /* ── Step 6: Read the app's initial Stack Pointer from its vector table ─
+    /*  Step 6: Read the app's initial Stack Pointer from its vector table 
      * On Cortex-M4, the very first word of the IVT (at offset 0) is the
      * initial Main Stack Pointer value (not a function pointer: just a value).
      * We must set MSP to this before jumping, or the app's first function call
@@ -335,14 +335,14 @@ static void jump_to_application(void)
      */
     uint32_t app_stack_pointer  = *(volatile uint32_t *)(0x08008000 + 0x00);
 
-    /* ── Step 7: Read the app's Reset_Handler address from its vector table ─
+    /*  Step 7: Read the app's Reset_Handler address from its vector table 
      * The second word of the IVT (offset 4) is the Reset_Handler: the app's
      * actual entry point. This is what the CPU would call if the app were
      * loaded at reset. We call it manually.
      */
     uint32_t app_reset_handler  = *(volatile uint32_t *)(0x08008000 + 0x04);
 
-    /* ── Step 8: Set MSP and jump ───────────────────────────────────────────
+    /*  Step 8: Set MSP and jump 
      * __set_MSP() writes directly to the MSP register (no stack frame created).
      * We cast the Reset_Handler address to a void function pointer and call it.
      * From this point on, the bootloader is gone. If the app returns from
@@ -403,12 +403,12 @@ This dual use is intentional: it means no additional hardware is needed for firm
 **The force-update flow:**
 
 ```
-Hold PB10 → Press RESET → Release RESET (keep PB10 held)
-    → Bootloader reads PB10 = LOW
-    → Skips magic number and CRC checks entirely
-    → Immediately erases app flash (pages 16:255)
-    → Starts XMODEM receiver, prints 'C' every second
-    → Ready to receive new firmware
+Hold PB10  Press RESET  Release RESET (keep PB10 held)
+     Bootloader reads PB10 = LOW
+     Skips magic number and CRC checks entirely
+     Immediately erases app flash (pages 16:255)
+     Starts XMODEM receiver, prints 'C' every second
+     Ready to receive new firmware
 ```
 
 > [!TIP]
@@ -418,25 +418,25 @@ Hold PB10 → Press RESET → Release RESET (keep PB10 held)
 
 ## 7. CRC Failure Handling
 
-If the bootloader detects that `magic_number ≠ 0xAA55AA55` or that the calculated CRC does not match the stored `crc32`, it does **not** attempt to jump to the application. Instead:
+If the bootloader detects that `magic_number  0xAA55AA55` or that the calculated CRC does not match the stored `crc32`, it does **not** attempt to jump to the application. Instead:
 
 ```
 Power on / Reset
-    │
-    ├─► PB10 held? ─────────────────────────────────────────────► Enter OTA mode
-    │
-    └─► PB10 not held
-            │
-            ├─► Read AppHeader at 0x08008188
-            │       magic_number != 0xAA55AA55?  ──────────────► Print error, Enter OTA mode
-            │
-            └─► magic_number OK
-                    │
-                    ├─► Calculate CRC32 over entire image
-                    │
-                    ├─► CRC mismatch? ──────────────────────────► Print error, Enter OTA mode
-                    │
-                    └─► CRC match ──────────────────────────────► Jump to app ✓
+    
+     PB10 held?  Enter OTA mode
+    
+     PB10 not held
+            
+             Read AppHeader at 0x08008188
+                   magic_number != 0xAA55AA55?   Print error, Enter OTA mode
+            
+             magic_number OK
+                    
+                     Calculate CRC32 over entire image
+                    
+                     CRC mismatch?  Print error, Enter OTA mode
+                    
+                     CRC match  Jump to app 
 ```
 
 The "print error, enter OTA mode" path outputs a message on UART1 (115200 baud) so a connected terminal can see exactly why:
@@ -461,19 +461,19 @@ This "fail into OTA mode" behavior is the key safety property. A device with cor
 
 | Property | Provided? | How |
 |---|---|---|
-| **Image integrity** | ✅ Yes | CRC32 detects accidental corruption (power loss, flash wear, bad transfer) |
-| **Force-update recovery** | ✅ Yes | PB10 + reset always provides a recovery path |
-| **Version tracking** | ✅ Yes | `version` field in AppHeader, displayed in CLI `status` command |
-| **Separation of concerns** | ✅ Yes | Bootloader and app are completely independent PlatformIO projects |
+| **Image integrity** |  Yes | CRC32 detects accidental corruption (power loss, flash wear, bad transfer) |
+| **Force-update recovery** |  Yes | PB10 + reset always provides a recovery path |
+| **Version tracking** |  Yes | `version` field in AppHeader, displayed in CLI `status` command |
+| **Separation of concerns** |  Yes | Bootloader and app are completely independent PlatformIO projects |
 
 ### What This Bootloader Does NOT Provide
 
 | Property | Provided? | Notes |
 |---|---|---|
-| **Image authenticity** | ❌ No | CRC32 only detects corruption: it does not prove *who* created the image |
-| **Encryption** | ❌ No | Image transmitted and stored in plaintext |
-| **Rollback protection** | ❌ No | Any valid image can be installed, including older versions |
-| **Secure boot chain** | ❌ No | No hardware root of trust (ST RDP levels not used) |
+| **Image authenticity** |  No | CRC32 only detects corruption: it does not prove *who* created the image |
+| **Encryption** |  No | Image transmitted and stored in plaintext |
+| **Rollback protection** |  No | Any valid image can be installed, including older versions |
+| **Secure boot chain** |  No | No hardware root of trust (ST RDP levels not used) |
 
 ### Future Work
 
@@ -492,4 +492,4 @@ For a production deployment where the firmware update channel is untrusted (e.g.
 
 ---
 
-*← [03: FreeRTOS Tasks & IPC](03_freertos_tasks.md) | [05: Hardware PWM & LED Control](05_hardware_pwm.md) →*
+* [03: FreeRTOS Tasks & IPC](03_freertos_tasks.md) | [05: Hardware PWM & LED Control](05_hardware_pwm.md) *

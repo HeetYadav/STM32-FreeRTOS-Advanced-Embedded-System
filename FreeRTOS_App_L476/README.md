@@ -23,11 +23,11 @@ This is the main application: the firmware that the Bootloader verifies and laun
 
 | Signal | MCU Pin | Peripheral | Notes |
 |--------|---------|------------|-------|
-| LED 1 (nearest) | PB4 | TIM3_CH1 (AF2) | 220Ω series resistor |
-| LED 2 | PB5 | TIM3_CH2 (AF2) | 220Ω series resistor |
-| LED 3 | PB3 | TIM2_CH2 (AF1) | 220Ω series resistor |
-| LED 4 (farthest) | PA8 | TIM1_CH1 (AF1) | 220Ω series resistor |
-| HC-SR04 TRIG | PC7 | GPIO Output | 10µs pulse |
+| LED 1 (nearest) | PB4 | TIM3_CH1 (AF2) | 220 series resistor |
+| LED 2 | PB5 | TIM3_CH2 (AF2) | 220 series resistor |
+| LED 3 | PB3 | TIM2_CH2 (AF1) | 220 series resistor |
+| LED 4 (farthest) | PA8 | TIM1_CH1 (AF1) | 220 series resistor |
+| HC-SR04 TRIG | PC7 | GPIO Output | 10s pulse |
 | HC-SR04 ECHO | PB6 | EXTI6 | RISING+FALLING interrupt |
 | HW-201 IR OUT | PA7 | EXTI7 | RISING+FALLING interrupt, active LOW |
 | UART TX | PA9 | USART1_TX (AF7) | 115200 baud 8N1 |
@@ -36,7 +36,7 @@ This is the main application: the firmware that the Bootloader verifies and laun
 | Ext. Button / OTA trigger | PB10 | GPIO Input (PULLUP) | Triggers FLASH pattern; hold on reset for OTA |
 | Heartbeat LED (onboard) | PA5 | GPIO Output | Blinks 1Hz to confirm RTOS running |
 
-> 📸 **[Hardware Photo: Full pin mapping on breadboard]**
+>  **[Hardware Photo: Full pin mapping on breadboard]**
 > *(Contribute a photo via PR: see [CONTRIBUTING.md](../CONTRIBUTING.md)!)*
 
 ---
@@ -94,8 +94,8 @@ Type 'help' for commands.
 | `help` | List all commands | None |
 | `sensor start` | Arm sensors + LED bar graph | HC-SR04 starts firing, LEDs respond to distance |
 | `sensor stop` | Disarm sensors | All 4 LEDs turn off |
-| `led cascade` | Knight Rider sweep pattern | LEDs sweep back and forth 3× |
-| `led flash` | All LEDs blink 5× | All 4 LEDs flash simultaneously |
+| `led cascade` | Knight Rider sweep pattern | LEDs sweep back and forth 3 |
+| `led flash` | All LEDs blink 5 | All 4 LEDs flash simultaneously |
 | `status` | Print system uptime | None |
 
 ---
@@ -123,4 +123,4 @@ Type 'help' for commands.
 
 ---
 
-*← [Back to Bootloader](../SecureBootloader_L476/README.md)* | *← [Back to main README](../README.md)*
+* [Back to Bootloader](../SecureBootloader_L476/README.md)* | * [Back to main README](../README.md)*

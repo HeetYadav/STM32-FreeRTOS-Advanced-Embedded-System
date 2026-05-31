@@ -1,6 +1,6 @@
 # Contributing to STM32-FreeRTOS-Advanced-Embedded-System
 
-First off: thank you for taking the time to contribute! 🎉
+First off: thank you for taking the time to contribute! 
 
 This project is a real-hardware, real-firmware embedded systems showcase built on the STM32L476RG Nucleo board. Contributions that improve its clarity, correctness, completeness, or educational value are genuinely welcome: whether you're a seasoned firmware engineer or someone just getting started with FreeRTOS and STM32.
 
@@ -11,7 +11,7 @@ This project is a real-hardware, real-firmware embedded systems showcase built o
 - [What Kinds of Contributions Are Welcome](#what-kinds-of-contributions-are-welcome)
 - [Ways to Contribute](#ways-to-contribute)
   - [Bug Reports](#bug-reports)
-  - [Hardware Photos ⭐ HIGH VALUE](#hardware-photos--high-value)
+  - [Hardware Photos  HIGH VALUE](#hardware-photos--high-value)
   - [Documentation Improvements](#documentation-improvements)
   - [New FreeRTOS Task Ideas](#new-freertos-task-ideas)
   - [New CLI Commands](#new-cli-commands)
@@ -28,15 +28,15 @@ Almost everything! This project benefits from many types of contributions:
 
 | Contribution Type              | Value  | Notes                                                         |
 |-------------------------------|--------|---------------------------------------------------------------|
-| Hardware photos                | ⭐⭐⭐ | The single highest-impact contribution you can make            |
-| Bug fixes (firmware)           | ⭐⭐⭐ | Especially timing, RTOS, or flash-related issues               |
-| Documentation improvements     | ⭐⭐⭐ | Clarifications, diagrams, corrections                         |
-| New FreeRTOS task ideas        | ⭐⭐   | Must be self-contained, not break existing task communication  |
-| New CLI commands               | ⭐⭐   | Follow the existing `TerminalTask` parsing pattern             |
-| Wiring corrections             | ⭐⭐   | If a pin label, timer channel, or AF mapping is wrong          |
-| Tested timing / distance data  | ⭐⭐   | Real measurements from your hardware setup                    |
-| Bootloader / OTA improvements  | ⭐⭐   | XMODEM robustness, CRC edge cases                             |
-| PlatformIO / toolchain fixes   | ⭐     | `platformio.ini`, build flags, post-build script              |
+| Hardware photos                |  | The single highest-impact contribution you can make            |
+| Bug fixes (firmware)           |  | Especially timing, RTOS, or flash-related issues               |
+| Documentation improvements     |  | Clarifications, diagrams, corrections                         |
+| New FreeRTOS task ideas        |    | Must be self-contained, not break existing task communication  |
+| New CLI commands               |    | Follow the existing `TerminalTask` parsing pattern             |
+| Wiring corrections             |    | If a pin label, timer channel, or AF mapping is wrong          |
+| Tested timing / distance data  |    | Real measurements from your hardware setup                    |
+| Bootloader / OTA improvements  |    | XMODEM robustness, CRC edge cases                             |
+| PlatformIO / toolchain fixes   |      | `platformio.ini`, build flags, post-build script              |
 
 ---
 
@@ -53,7 +53,7 @@ Before filing a bug:
 
 ---
 
-### Hardware Photos ⭐ HIGH VALUE
+### Hardware Photos  HIGH VALUE
 
 **This is the single most impactful contribution you can make to this repository.**
 
@@ -78,7 +78,7 @@ Photos of real hardware build credibility. They let other engineers visually ver
    - Preferred formats: `.jpg` or `.png`, max ~2MB per image
 3. Reference them in [`docs/hardware_wiring.md`](docs/hardware_wiring.md) by replacing the relevant placeholder:
    ```markdown
-   > 📸 **[Hardware Photo: Full breadboard layout]** *(Contribute one via PR!)*
+   >  **[Hardware Photo: Full breadboard layout]** *(Contribute one via PR!)*
    ```
    with:
    ```markdown
@@ -99,7 +99,7 @@ The documentation lives in the `docs/` folder and the root-level `README.md`. If
 - A Mermaid diagram that could be improved
 - A section that's out of date with the code
 
-…please open a PR or an issue. Documentation bugs in embedded systems are real bugs: they waste hours of debugging time for the next person.
+please open a PR or an issue. Documentation bugs in embedded systems are real bugs: they waste hours of debugging time for the next person.
 
 ---
 

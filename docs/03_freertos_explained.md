@@ -1,6 +1,6 @@
-﻿# FreeRTOS Explained: From First Principles to Our Implementation
+# FreeRTOS Explained: From First Principles to Our Implementation
 
-> **Navigation**: [â† 02 Bootloader Deep Dive](02_bootloader.md) | [Home](../README.md) | [04 PWM & LED Control â†’](04_pwm_led_control.md)
+> **Navigation**: [ 02 Bootloader Deep Dive](02_bootloader.md) | [Home](../README.md) | [04 PWM & LED Control ->](04_pwm_led_control.md)
 
 ---
 
@@ -55,7 +55,7 @@ int main(void) {
 | No concept of "priority" : button presses and LED updates are equals | Critical events can be starved |
 
 > [!WARNING]
-> The HC-SR04 ultrasonic sensor requires a 10Âµs trigger pulse followed by waiting up to **38ms** for an echo. In a polling loop, the entire system halts during this wait. This is fatal for anything else that needs timely service.
+> The HC-SR04 ultrasonic sensor requires a 10us trigger pulse followed by waiting up to **38ms** for an echo. In a polling loop, the entire system halts during this wait. This is fatal for anything else that needs timely service.
 
 ---
 
@@ -99,17 +99,17 @@ while (1) {
 Each concern gets its own **task** : an independent execution context with its own stack. The RTOS kernel schedules them cooperatively/preemptively and provides safe communication primitives (queues, semaphores, mutexes).
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚                   FreeRTOS Scheduler (1ms tick)             â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚ HeartbeatTaskâ”‚ TerminalTask â”‚  SensorTask  â”‚LEDController  â”‚
-â”‚ Priority 1   â”‚ Priority 2   â”‚  Priority 4  â”‚ Priority 2    â”‚
-â”‚              â”‚              â”‚  (HIGHEST)   â”‚               â”‚
-â”‚ Blinks PA5   â”‚ Parses CLI   â”‚ HC-SR04 + IR â”‚ PWM fading    â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                              â:²
+------------------------------------------------------------
+|                   FreeRTOS Scheduler (1ms tick)             |
+|---------------------------------------------------------
+| HeartbeatTask| TerminalTask |  SensorTask  |LEDController  |
+| Priority 1   | Priority 2   |  Priority 4  | Priority 2    |
+|              |              |  (HIGHEST)   |               |
+| Blinks PA5   | Parses CLI   | HC-SR04 + IR | PWM fading    |
+L---------------------------------------------------------
+                              :
                          ISRs post to queues
-                    (EXTI, USART, timers) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                    (EXTI, USART, timers) ---------
 ```
 
 **Why this wins:**
@@ -241,7 +241,7 @@ void ButtonMonitorTask(void *pvParameters) {
         uint8_t cur_pc13 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
         uint8_t cur_pb10 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_10);
 
-        // Falling edge = button pressed (HIGH â†’ LOW)
+        // Falling edge = button pressed (HIGH -> LOW)
         if (last_pc13 == 1 && cur_pc13 == 0) {
             uint32_t cmd = LED_CMD_CASCADE;
             xQueueSend(xLEDQueue, &cmd, 0); // non-blocking send
@@ -308,15 +308,15 @@ void SensorTask(void *pvParameters) {
     SensorMessage_t msg;
 
     for (;;) {
-        // Fire trigger: 10Âµs HIGH pulse on PC7
+        // Fire trigger: 10us HIGH pulse on PC7
         HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
-        vTaskDelay(pdMS_TO_TICKS(1)); // ~10Âµs minimum; 1ms is safe and avoids busy-wait
+        vTaskDelay(pdMS_TO_TICKS(1)); // ~10us minimum; 1ms is safe and avoids busy-wait
         HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
 
         // Wait up to 40ms for echo result from ISR
         if (xQueueReceive(xSensorQueue, &msg, pdMS_TO_TICKS(40)) == pdTRUE) {
             if (msg.type == SENSOR_ULTRASONIC) {
-                uint32_t distance_cm = msg.value / 58; // time(Âµs) Ã· 58 = cm
+                uint32_t distance_cm = msg.value / 58; // time(us)  58 = cm
                 uint32_t led_level = distance_to_led_level(distance_cm);
                 xQueueSend(xLEDQueue, &led_level, 0);
             } else if (msg.type == SENSOR_IR) {
@@ -395,11 +395,11 @@ Queues are the backbone of inter-task communication. No task shares global state
 
 ```
 [User types: "sensor start\r"]
-       â†“  (character by character)
-USART1_IRQHandler â†’ xQueueSendFromISR â†’ xRXQueue [s][e][n][s][o][r][ ][s][t][a][r][t][\r]
-                                                          â†“
+         (character by character)
+USART1_IRQHandler -> xQueueSendFromISR -> xRXQueue [s][e][n][s][o][r][ ][s][t][a][r][t][\r]
+                                                          
                                               TerminalTask pulls bytes, builds line buffer
-                                                          â†“
+                                                          
                                               parse_command("sensor start")
 ```
 
@@ -420,7 +420,7 @@ USART1_IRQHandler â†’ xQueueSendFromISR â†’ xRXQueue [s][e][n][s][o][r
 // Message structure : carries both sensor types through one queue
 typedef struct {
     uint8_t  type;   // SENSOR_ULTRASONIC or SENSOR_IR
-    uint32_t value;  // echo duration in Âµs (ultrasonic), or 0/1 (IR detect/clear)
+    uint32_t value;  // echo duration in us (ultrasonic), or 0/1 (IR detect/clear)
 } SensorMessage_t;
 ```
 
@@ -483,7 +483,7 @@ void EXTI9_5_IRQHandler(void) {
     // --- Handle PB6 (HC-SR04 Echo) ---
     if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_6)) {
         if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6) == GPIO_PIN_SET) {
-            // Rising edge: echo started : reset our 1Âµs stopwatch
+            // Rising edge: echo started : reset our 1us stopwatch
             TIM5->CNT = 0;
             TIM5->CR1 |= TIM_CR1_CEN;  // start TIM5 counting at 1MHz
         } else {
@@ -491,7 +491,7 @@ void EXTI9_5_IRQHandler(void) {
             TIM5->CR1 &= ~TIM_CR1_CEN; // stop TIM5 : freeze the count
             SensorMessage_t msg;
             msg.type  = SENSOR_ULTRASONIC;
-            msg.value = TIM5->CNT;      // CNT ticks = Âµs (TIM5 at 1MHz)
+            msg.value = TIM5->CNT;      // CNT ticks = us (TIM5 at 1MHz)
 
             // ISR-safe send : never blocks, sets xHigherPriorityTaskWoken if needed
             xQueueSendFromISR(xSensorQueue, &msg, &xHigherPriorityTaskWoken);
@@ -521,11 +521,11 @@ void EXTI9_5_IRQHandler(void) {
 ```
 1. HC-SR04 echo pin (PB6) goes LOW
 2. EXTI9_5_IRQHandler fires (preempts whatever task was running)
-3. ISR reads TIM5->CNT (echo duration in Âµs), builds SensorMessage_t
+3. ISR reads TIM5->CNT (echo duration in us), builds SensorMessage_t
 4. xQueueSendFromISR posts to xSensorQueue
-   â†’ xHigherPriorityTaskWoken = pdTRUE (SensorTask was blocking on this queue)
+   -> xHigherPriorityTaskWoken = pdTRUE (SensorTask was blocking on this queue)
 5. portYIELD_FROM_ISR(pdTRUE) sets PendSV interrupt pending
-6. ISR returns â†’ PendSV fires immediately (lowest hardware priority, fires last)
+6. ISR returns -> PendSV fires immediately (lowest hardware priority, fires last)
 7. Scheduler context-switches to SensorTask (priority 4, highest ready task)
 8. SensorTask calculates distance, posts LED command : all within microseconds
 ```
@@ -543,7 +543,7 @@ void EXTI9_5_IRQHandler(void) {
 |---|---|---|
 | 4 (Highest) | `SensorTask` | HC-SR04 echo data is time-stamped in ISR; SensorTask must wake immediately to process it |
 | 3 | `ButtonMonitorTask` | User button presses need sub-100ms latency to feel responsive |
-| 2 | `TerminalTask` | CLI response latency of â‰¤50ms is imperceptible to the user |
+| 2 | `TerminalTask` | CLI response latency of 50ms is imperceptible to the user |
 | 2 | `LEDControllerTask` | LED visual updates lag by one scheduler tick at worst : imperceptible |
 | 1 (Lowest) | `HeartbeatTask` | Purely cosmetic blink : runs only during idle time |
 
@@ -634,12 +634,12 @@ stateDiagram-v2
 
 | Event | Task Affected | Transition |
 |---|---|---|
-| HC-SR04 echo falls, ISR posts to xSensorQueue | SensorTask | Blocked â†’ Ready (immediately preempts all lower-priority tasks) |
-| 500ms delay expires | SensorTask | Blocked â†’ Ready (fires trigger pulse cycle) |
-| 1000ms delay expires | HeartbeatTask | Blocked â†’ Ready (runs only when all others blocked) |
-| User types a character, USART ISR posts to xRXQueue | TerminalTask | Blocked â†’ Ready |
-| 50ms poll delay expires | ButtonMonitorTask | Blocked â†’ Ready |
-| xLEDQueue receives a command from any producer | LEDControllerTask | Blocked â†’ Ready |
+| HC-SR04 echo falls, ISR posts to xSensorQueue | SensorTask | Blocked -> Ready (immediately preempts all lower-priority tasks) |
+| 500ms delay expires | SensorTask | Blocked -> Ready (fires trigger pulse cycle) |
+| 1000ms delay expires | HeartbeatTask | Blocked -> Ready (runs only when all others blocked) |
+| User types a character, USART ISR posts to xRXQueue | TerminalTask | Blocked -> Ready |
+| 50ms poll delay expires | ButtonMonitorTask | Blocked -> Ready |
+| xLEDQueue receives a command from any producer | LEDControllerTask | Blocked -> Ready |
 
 ### The Idle Task
 
@@ -668,11 +668,11 @@ void vApplicationIdleHook(void) {
 | Priority range | 1 (HeartbeatTask) to 4 (SensorTask) |
 | Queues | 3 : xRXQueue, xSensorQueue, xLEDQueue |
 | ISR communication | `xQueueSendFromISR` + `portYIELD_FROM_ISR` |
-| Stack total | ~1,920 words â‰ˆ 7.5KB RAM for task stacks |
+| Stack total | ~1,920 words  7.5KB RAM for task stacks |
 | Hardware peripheral ownership | Only one task ever touches each peripheral |
 
 The FreeRTOS architecture transforms what would be a brittle, timing-dependent super-loop into a clean, extensible system where each concern is isolated, each timing requirement is met by priority, and every hardware event flows safely from ISR to task through a typed, thread-safe queue.
 
 ---
 
-> **Navigation**: [â† 02 Bootloader Deep Dive](02_bootloader.md) | [Home](../README.md) | [04 PWM & LED Control â†’](04_pwm_led_control.md)
+> **Navigation**: [ 02 Bootloader Deep Dive](02_bootloader.md) | [Home](../README.md) | [04 PWM & LED Control ->](04_pwm_led_control.md)
