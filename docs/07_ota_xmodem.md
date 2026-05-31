@@ -531,6 +531,7 @@ Transferred: 6016 / 85632 bytes (7%)
 ```
 
 Packet numbers increment every ~133 bytes. Transfer speed at 115200 baud is approximately 10 KB/s, so a 100 KB image takes about 10–15 seconds.
+<img width="282" height="272" alt="Screenshot 2026-05-31 194201" src="https://github.com/user-attachments/assets/a3722ee5-f87d-43f9-84af-75d55a465b93" />
 
 **Step 7 — Confirm success and wait for reboot:**
 
