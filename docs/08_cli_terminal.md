@@ -1,4 +1,4 @@
-﻿# 08 â€” CLI Terminal: The Serial Command Interface
+﻿# 08 CLI Terminal: The Serial Command Interface
 
 > **Navigation**: [â† 07 Button & GPIO](07_button_gpio.md) | [Home](../README.md) | [09 Debugging Guide â†’](09_debugging.md)
 
@@ -410,6 +410,7 @@ Uptime: 38291 ms | Sensors: DISARMED | IR: CLEAR
 ```
 
 ---
+<img width="1913" height="1079" alt="Screenshot 2026-05-31 194029" src="https://github.com/user-attachments/assets/cd2a355b-356f-4cda-bb0b-dddf9cefb264" />
 
 ## 6. How to Connect
 
