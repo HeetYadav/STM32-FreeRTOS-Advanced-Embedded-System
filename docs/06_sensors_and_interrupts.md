@@ -1,4 +1,4 @@
-﻿# 06 â€” Sensors and Interrupts: HC-SR04, HW-201, and the EXTI Architecture
+﻿# Sensors and Interrupts: HC-SR04, HW-201, and the EXTI Architecture
 
 > **Navigation**: [â† 05 OTA Update System](05_ota_update.md) | [Home](../README.md) | [07 Button & GPIO â†’](07_button_gpio.md)
 
