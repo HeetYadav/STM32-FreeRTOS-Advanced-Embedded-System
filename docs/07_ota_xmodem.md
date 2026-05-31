@@ -499,6 +499,7 @@ CCCCCCCCCC...
 ```
 
 The `CCCCC...` output means the bootloader is actively sending the XMODEM-CRC initiation character every second, waiting for your terminal to respond.
+<img width="1919" height="1079" alt="Screenshot 2026-05-31 194216" src="https://github.com/user-attachments/assets/730ab72e-a279-4d7f-821c-9b2f53130489" />
 
 > [!TIP]
 > If you don't see this output, check that you selected the correct COM port and baud rate. Also ensure PB10 was held during the reset — not just before or after.
