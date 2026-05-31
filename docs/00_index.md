@@ -1,4 +1,4 @@
-# docs/ — Documentation Index
+# docs/ Documentation Index
 
 Welcome to the full documentation suite for the **STM32 Advanced FreeRTOS Embedded System**. Every document is written to explain concepts from first principles while providing the depth needed for real-world understanding.
 
