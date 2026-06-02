@@ -25,7 +25,7 @@ If you have never written a line of C, start with a C basics course first, then 
 3. [`docs/01_system_architecture.md`](01_system_architecture.md): the full system map
 
 ### Milestone Check:
-Can you answer these without looking?
+Can you answer these?
 - [ ] How many tasks does the FreeRTOS application have? What does each one do?
 - [ ] What happens when you press the RESET button while holding PB10?
 - [ ] What is the difference between `xSensorQueue` and `xLEDQueue`?
