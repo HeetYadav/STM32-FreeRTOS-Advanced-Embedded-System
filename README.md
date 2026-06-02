@@ -16,27 +16,27 @@
 
 ---
 
-##  Table of Contents
+## Table of Contents
 
-- [Boot Sequence](#-boot-sequence)
-- [Features](#-features)
-- [Hardware](#-hardware)
-- [System Architecture](#-system-architecture)
-- [Complete Pin Mapping](#-complete-pin-mapping)
-- [Quick Start](#-quick-start)
-- [CLI Reference](#-cli-reference)
-- [OTA Firmware Update Guide](#-ota-firmware-update-guide)
-- [What I Learned / Engineering Challenges](#-what-i-learned--engineering-challenges)
-- [Software & Tools](#-software--tools)
-- [Project Structure](#-project-structure)
-- [Documentation](#-documentation)
-- [Learning Path](#-learning-path)
-- [Contributing](#-contributing)
-- [License](#-license)
+- [Boot Sequence](#boot-sequence)
+- [Features](#features)
+- [Hardware](#hardware)
+- [System Architecture](#system-architecture)
+- [Complete Pin Mapping](#complete-pin-mapping)
+- [Quick Start](#quick-start)
+- [CLI Reference](#cli-reference)
+- [OTA Firmware Update Guide](#ota-firmware-update-guide)
+- [What I Learned / Engineering Challenges](#what-i-learned--engineering-challenges)
+- [Software & Tools](#software--tools)
+- [Project Structure](#project-structure)
+- [Documentation](#documentation)
+- [Learning Path](#learning-path)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
-##  Boot Sequence
+## Boot Sequence
 
 Every power-on passes through the custom secure bootloader before the application ever gets a chance to run. The bootloader lives permanently in the lowest 32 KB of Flash and owns the reset vector.
 
@@ -73,7 +73,7 @@ flowchart TD
 
 ---
 
-##  Features
+## Features
 
 | Feature | Implementation | Hardware Used |
 |---|---|---|
@@ -87,7 +87,7 @@ flowchart TD
 
 ---
 
-##  Hardware
+## Hardware
 
 <img width="3735" height="2555" alt="HardwareSetup" src="https://github.com/user-attachments/assets/b9f799ea-b747-4c4d-8cca-d983820e10dc" />
 
@@ -106,7 +106,7 @@ flowchart TD
 
 ---
 
-##  System Architecture
+## System Architecture
 
 The system is split into **two completely independent PlatformIO projects** that live in separate Flash regions and never share code. This separation means a corrupted application can never brick the device: the bootloader is always intact.
 
@@ -166,7 +166,7 @@ graph LR
 
 ---
 
-##  Complete Pin Mapping
+## Complete Pin Mapping
 
 | Signal | MCU Pin | Peripheral | Direction | Notes |
 |---|---|---|---|---|
@@ -185,7 +185,7 @@ graph LR
 
 ---
 
-##  Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -322,7 +322,7 @@ Then start distance sensing:
 
 ---
 
-##  CLI Reference
+## CLI Reference
 
 All commands are sent over UART1 at 115200 baud. Commands are case-sensitive and terminated with `\r\n` (Enter key).
 
@@ -337,7 +337,7 @@ All commands are sent over UART1 at 115200 baud. Commands are case-sensitive and
 
 ---
 
-##  OTA Firmware Update Guide
+## OTA Firmware Update Guide
 
 OTA (Over-The-Air, in this case Over-UART) updates let you reprogram the application firmware **without a debugger**. The bootloader handles all flash erase and programming operations.
 
@@ -399,7 +399,7 @@ The board reboots, the bootloader re-verifies CRC, and jumps to the new firmware
 
 ---
 
-##  What I Learned / Engineering Challenges
+## What I Learned / Engineering Challenges
 
 ###  Bug #1: The XMODEM Unaligned Memory Access Fault
 
@@ -466,7 +466,7 @@ Splitting firmware into two independent PlatformIO projects with a hard Flash bo
 
 ---
 
-##  Software & Tools
+## Software & Tools
 
 | Tool | Version | Purpose |
 |---|---|---|
@@ -480,7 +480,7 @@ Splitting firmware into two independent PlatformIO projects with a hard Flash bo
 
 ---
 
-##  Project Structure
+## Project Structure
 
 ```
 STM32-FreeRTOS-Advanced-Embedded-System/
@@ -521,7 +521,7 @@ STM32-FreeRTOS-Advanced-Embedded-System/
 
 ---
 
-##  Documentation
+## Documentation
 
 Full engineering documentation lives in the [`docs/`](docs/) folder:
 
@@ -541,7 +541,7 @@ Full engineering documentation lives in the [`docs/`](docs/) folder:
 
 ---
 
-##  Learning Path
+## Learning Path
 
 New to embedded systems? The [`LEARNING_PATH.md`](LEARNING_PATH.md) file gives you a structured **7-stage journey** through this entire project:
 
@@ -559,7 +559,7 @@ Not sure what a technical term means? The **[Glossary](docs/glossary.md)** defin
 
 ---
 
-##  Contributing
+## Contributing
 
 Contributions are very welcome! Here's what would be most valuable:
 
@@ -576,7 +576,7 @@ Contributions are very welcome! Here's what would be most valuable:
 
 ---
 
-##  License
+## License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for full terms.
 
