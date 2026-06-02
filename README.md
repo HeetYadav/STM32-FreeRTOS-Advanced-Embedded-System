@@ -198,7 +198,7 @@ graph LR
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/STM32-FreeRTOS-Advanced-Embedded-System.git
+git clone https://github.com/HeetYadav/STM32-FreeRTOS-Advanced-Embedded-System.git
 cd STM32-FreeRTOS-Advanced-Embedded-System
 ```
 
