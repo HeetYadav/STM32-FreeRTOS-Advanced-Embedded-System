@@ -21,8 +21,8 @@ If you have never written a line of C, start with a C basics course first, then 
 
 ### Read in this order:
 1. The main [`README.md`](../README.md): read every section, don't skip anything
-2. [`docs/00_index.md`](00_index.md): the navigation map for all 11 docs
-3. [`docs/01_system_architecture.md`](01_system_architecture.md): the full system map
+2. [`docs/00_index.md`](docs/00_index.md): the navigation map for all 11 docs
+3. [`docs/01_system_architecture.md`](docs/01_system_architecture.md): the full system map
 
 ### Milestone Check:
 Can you answer these?
@@ -40,7 +40,7 @@ If you can answer all 4, move to Stage 2.
 **Goal:** Be able to wire the full circuit yourself from the pin map, without copying from a photo.
 
 ### Read in this order:
-1. [`docs/02_hardware_wiring.md`](02_hardware_wiring.md): full wiring guide
+1. [`docs/02_hardware_wiring.md`](docs/02_hardware_wiring.md): full wiring guide
 
 ### Key concepts to understand:
 - Why does the HC-SR04 ECHO pin need a voltage divider but the TRIG pin does not?
@@ -61,7 +61,7 @@ If the LEDs respond to your hand's distance, you are wired correctly. Move to St
 **Goal:** Understand why this project uses an RTOS instead of a big `while(1)` loop.
 
 ### Read in this order:
-1. [`docs/03_freertos_explained.md`](03_freertos_explained.md): tasks, queues, priorities, scheduling
+1. [`docs/03_freertos_explained.md`](docs/03_freertos_explained.md): tasks, queues, priorities, scheduling
 
 ### Key concepts to understand:
 - What is a context switch and when does it happen?
@@ -80,7 +80,7 @@ If the LEDs respond to your hand's distance, you are wired correctly. Move to St
 **Goal:** Understand how hardware interrupts work at the register level and how they hand data to the RTOS safely.
 
 ### Read in this order:
-1. [`docs/06_sensors_and_interrupts.md`](06_sensors_and_interrupts.md): HC-SR04, HW-201, EXTI, TIM5
+1. [`docs/06_sensors_and_interrupts.md`](docs/06_sensors_and_interrupts.md): HC-SR04, HW-201, EXTI, TIM5
 
 ### Key concepts to understand:
 - What is the difference between polling a pin and using an interrupt?
@@ -104,7 +104,7 @@ Read Bug #2 in the README (HC-SR04 always returning 4cm). This is the shadow reg
 **Goal:** Understand how the LED bar graph works using hardware timers: no software blinking.
 
 ### Read in this order:
-1. [`docs/05_hardware_pwm.md`](05_hardware_pwm.md): timers, PWM channels, duty cycle
+1. [`docs/05_hardware_pwm.md`](docs/05_hardware_pwm.md): timers, PWM channels, duty cycle
 
 ### Key concepts to understand:
 - What are PSC and ARR and how do they set the PWM frequency?
@@ -123,8 +123,8 @@ Read Bug #2 in the README (HC-SR04 always returning 4cm). This is the shadow reg
 **Goal:** Understand how a secure bootloader works at the register level: the hardest and most valuable part of this project.
 
 ### Read in this order:
-1. [`docs/04_secure_bootloader.md`](04_secure_bootloader.md): CRC verification, XMODEM, Flash programming, VTOR/MSP jump
-2. [`docs/07_ota_xmodem.md`](07_ota_xmodem.md): the full XMODEM protocol and OTA flow
+1. [`docs/04_secure_bootloader.md`](docs/04_secure_bootloader.md): CRC verification, XMODEM, Flash programming, VTOR/MSP jump
+2. [`docs/07_ota_xmodem.md`](docs/07_ota_xmodem.md): the full XMODEM protocol and OTA flow
 
 ### Key concepts to understand:
 - What is VTOR and why must the bootloader set it before jumping to the application?
@@ -149,8 +149,8 @@ Read Bug #1 in the README (XMODEM unaligned access HardFault).
 **Goal:** Understand how interrupt-driven UART input works and how the full system performs.
 
 ### Read in this order:
-1. [`docs/08_cli_terminal.md`](08_cli_terminal.md): interrupt-driven UART, ring buffer, CLI parser
-2. [`docs/09_performance_analysis.md`](09_performance_analysis.md): stack, CPU load, ISR latency
+1. [`docs/08_cli_terminal.md`](docs/08_cli_terminal.md): interrupt-driven UART, ring buffer, CLI parser
+2. [`docs/09_performance_analysis.md`](docs/09_performance_analysis.md): stack, CPU load, ISR latency
 
 ### Key concepts to understand:
 - How does a byte typed in Tera Term end up executing a command in `TerminalTask`?
@@ -167,7 +167,7 @@ If you completed Stage 7 including the `uptime` command, you have not just read 
 
 ## Troubleshooting While Learning
 
-If something is not working, read [`docs/10_troubleshooting.md`](10_troubleshooting.md) first. Every common failure mode is documented with its root cause and fix.
+If something is not working, read [`docs/10_troubleshooting.md`](docs/10_troubleshooting.md) first. Every common failure mode is documented with its root cause and fix.
 
 If your issue is not in the troubleshooting doc, open a [GitHub Issue](https://github.com/HeetYadav/STM32-FreeRTOS-Advanced-Embedded-System/issues) with:
 - What you expected to happen
