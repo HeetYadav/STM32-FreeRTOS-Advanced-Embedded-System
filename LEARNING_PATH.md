@@ -183,6 +183,3 @@ Every technical term used in this project is defined in plain language in [`docs
 If you encounter a word you don't know (EXTI, VTOR, PSC, ISR, XMODEM, etc.), look there first.
 
 ---
-
-*Estimated total time to complete all 7 stages: 10–14 days of focused learning, 2–4 hours per day.*
-*At the end, you will understand embedded systems at a level most university courses do not reach.*
