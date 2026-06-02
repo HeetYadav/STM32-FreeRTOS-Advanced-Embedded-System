@@ -1,6 +1,6 @@
 # Hardware Wiring Guide
 
-> **Navigation**: [ System Architecture](01_system_architecture.md) | [ Back to README](../README.md) | [Bootloader ](03_bootloader.md)
+> **Navigation**: [ System Architecture](01_system_architecture.md) | [ Back to README](../README.md) | [Bootloader ](04_secure_bootloader.md)
 
 ---
 
@@ -65,7 +65,7 @@
 |---|---|---|---|---|---|
 | **LED1** (nearest, brightest at 5cm) | **PB4** | TIM3_CH1 | GPIOB | ~1 kHz | First LED to illuminate as object approaches |
 | **LED2** | **PB5** | TIM3_CH2 | GPIOB | ~1 kHz | |
-| **LED3** | **PB3** | TIM2_CH2 | GPIOB | ~1 kHz | Originally TIM2: see [TIM2 conflict](../docs/05_bugs_and_lessons.md) |
+| **LED3** | **PB3** | TIM2_CH2 | GPIOB | ~1 kHz | Originally TIM2: see [TIM2 conflict](10_troubleshooting.md) |
 | **LED4** (farthest, first to turn on) | **PA8** | TIM1_CH1 | GPIOA | ~1 kHz | First LED to light up as object enters 30 cm range |
 
 Each LED cathode connects to GND via a **220  resistor**. The MCU pin drives the anode (PWM HIGH = LED on).
@@ -380,4 +380,4 @@ No pins need to be configured for HIGH or VERY HIGH speed (which would increase 
 
 ---
 
-> **Navigation**: [ System Architecture](01_system_architecture.md) | [ Back to README](../README.md) | [Bootloader ](03_bootloader.md)
+> **Navigation**: [ System Architecture](01_system_architecture.md) | [ Back to README](../README.md) | [Bootloader ](04_secure_bootloader.md)

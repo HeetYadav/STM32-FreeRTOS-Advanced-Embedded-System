@@ -492,4 +492,4 @@ For a production deployment where the firmware update channel is untrusted (e.g.
 
 ---
 
-* [03: FreeRTOS Tasks & IPC](03_freertos_tasks.md) | [05: Hardware PWM & LED Control](05_hardware_pwm.md) *
+* [03: FreeRTOS Tasks & IPC](03_freertos_explained.md) | [05: Hardware PWM & LED Control](05_hardware_pwm.md) *

@@ -20,7 +20,7 @@ If you have never written a line of C, start with a C basics course first, then 
 **Goal:** Before reading any code, understand what the system does and how all the pieces connect.
 
 ### Read in this order:
-1. The main [`README.md`](../README.md): read every section, don't skip anything
+1. The main [`README.md`](README.md): read every section, don't skip anything
 2. [`docs/00_index.md`](docs/00_index.md): the navigation map for all 11 docs
 3. [`docs/01_system_architecture.md`](docs/01_system_architecture.md): the full system map
 

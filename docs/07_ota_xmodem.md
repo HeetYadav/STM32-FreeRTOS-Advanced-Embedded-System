@@ -593,4 +593,4 @@ Power failure during update
 
 ---
 
-* [06: Sensors & EXTI](06_sensors_exti.md) | [08: CLI & UART Terminal](08_cli_uart.md) *
+* [06: Sensors & EXTI](06_sensors_and_interrupts.md) | [08: CLI & UART Terminal](08_cli_terminal.md) *

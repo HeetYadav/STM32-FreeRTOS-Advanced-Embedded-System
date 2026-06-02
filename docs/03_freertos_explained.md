@@ -1,6 +1,6 @@
 # FreeRTOS Explained: From First Principles to Our Implementation
 
-> **Navigation**: [ 02 Bootloader Deep Dive](02_bootloader.md) | [Home](../README.md) | [04 PWM & LED Control ->](04_pwm_led_control.md)
+> **Navigation**: [ 02 Bootloader Deep Dive](04_secure_bootloader.md) | [Home](../README.md) | [04 PWM & LED Control ->](05_hardware_pwm.md)
 
 ---
 
@@ -675,4 +675,4 @@ The FreeRTOS architecture transforms what would be a brittle, timing-dependent s
 
 ---
 
-> **Navigation**: [ 02 Bootloader Deep Dive](02_bootloader.md) | [Home](../README.md) | [04 PWM & LED Control ->](04_pwm_led_control.md)
+> **Navigation**: [ 02 Bootloader Deep Dive](04_secure_bootloader.md) | [Home](../README.md) | [04 PWM & LED Control ->](05_hardware_pwm.md)

@@ -1,6 +1,6 @@
 # Sensors and Interrupts: HC-SR04, HW-201, and the EXTI Architecture
 
-> **Navigation**: [ 05 OTA Update System](05_ota_update.md) | [Home](../README.md) | [07 Button & GPIO ->](07_button_gpio.md)
+> **Navigation**: [ 05 OTA Update System](07_ota_xmodem.md) | [Home](../README.md) | [07 Button & GPIO ->](../README.md)
 
 ---
 
@@ -566,4 +566,4 @@ The design cleanly separates concerns: ISRs capture raw hardware events with min
 
 ---
 
-> **Navigation**: [ 05 OTA Update System](05_ota_update.md) | [Home](../README.md) | [07 Button & GPIO ->](07_button_gpio.md)
+> **Navigation**: [ 05 OTA Update System](07_ota_xmodem.md) | [Home](../README.md) | [07 Button & GPIO ->](../README.md)

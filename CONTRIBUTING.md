@@ -47,7 +47,7 @@ Almost everything! This project benefits from many types of contributions:
 If you found something that doesn't work: a wrong register write, a sensor that always reads 0, a CLI command that hangs: please open an issue using the **Bug Report** template.
 
 Before filing a bug:
-1. Check the [existing issues](../../issues) to avoid duplicates.
+1. Check the [existing issues](https://github.com/HeetYadav/STM32-FreeRTOS-Advanced-Embedded-System/issues) to avoid duplicates.
 2. Make sure you're on the latest `main` branch.
 3. Capture your **serial terminal output** (Tera Term at 115200 baud): it's the fastest way to diagnose firmware-level issues.
 
@@ -76,13 +76,13 @@ Photos of real hardware build credibility. They let other engineers visually ver
 2. Place image files in the `docs/images/` directory.
    - Use descriptive filenames: `breadboard_full_overview.jpg`, `hcsr04_wiring_closeup.jpg`
    - Preferred formats: `.jpg` or `.png`, max ~2MB per image
-3. Reference them in [`docs/hardware_wiring.md`](docs/hardware_wiring.md) by replacing the relevant placeholder:
+3. Reference them in [`docs/hardware_wiring.md`](docs/02_hardware_wiring.md) by replacing the relevant placeholder:
    ```markdown
    >  **[Hardware Photo: Full breadboard layout]** *(Contribute one via PR!)*
    ```
    with:
    ```markdown
-   ![Full breadboard layout](images/breadboard_full_overview.jpg)
+   ![Full breadboard layout](https://github.com/HeetYadav/STM32-FreeRTOS-Advanced-Embedded-System)
    ```
 4. Open a PR with the title: `docs: add hardware photo: [brief description]`
 
@@ -129,7 +129,7 @@ The serial CLI is implemented in `TerminalTask` in `src/terminal_task.c`. New co
 1. Add the command string to the `commands[]` array.
 2. Add a handler function `cmd_yourcommand(void)`.
 3. Update the `help` command output to list the new command.
-4. Document the command in [`docs/cli_reference.md`](docs/cli_reference.md) (or equivalent).
+4. Document the command in [`docs/cli_reference.md`](docs/08_cli_terminal.md) (or equivalent).
 
 Commands must be non-blocking: they should not `vTaskDelay` for more than a few milliseconds inside the handler.
 
@@ -196,7 +196,7 @@ Follow the existing C style used throughout the project:
 
 If your contribution adds or modifies **hardware connections**, please:
 
-1. **Update the wiring table** in [`docs/hardware_wiring.md`](docs/hardware_wiring.md) with:
+1. **Update the wiring table** in [`docs/hardware_wiring.md`](docs/02_hardware_wiring.md) with:
    - MCU pin
    - Alternate function (AF) number if applicable
    - Timer/channel if PWM

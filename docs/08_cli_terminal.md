@@ -1,6 +1,6 @@
 # CLI Terminal: The Serial Command Interface
 
-> **Navigation**: [ 07 Button & GPIO](07_button_gpio.md) | [Home](../README.md) | [09 Debugging Guide ->](09_debugging.md)
+> **Navigation**: [ 07 Button & GPIO](../README.md) | [Home](../README.md) | [09 Debugging Guide ->](10_troubleshooting.md)
 
 ---
 
@@ -465,4 +465,4 @@ The CLI transforms the embedded system from a silent, monolithic device into an 
 
 ---
 
-> **Navigation**: [ 07 Button & GPIO](07_button_gpio.md) | [Home](../README.md) | [09 Debugging Guide ->](09_debugging.md)
+> **Navigation**: [ 07 Button & GPIO](../README.md) | [Home](../README.md) | [09 Debugging Guide ->](10_troubleshooting.md)

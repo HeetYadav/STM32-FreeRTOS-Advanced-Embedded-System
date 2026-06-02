@@ -1,6 +1,6 @@
 # System Architecture
 
-> **Navigation**: [ Back to README](../README.md) | [Hardware Wiring ](02_hardware_wiring.md) | [Bootloader ](03_bootloader.md) | [FreeRTOS App ](04_freertos_app.md)
+> **Navigation**: [ Back to README](../README.md) | [Hardware Wiring ](02_hardware_wiring.md) | [Bootloader ](04_secure_bootloader.md) | [FreeRTOS App ](03_freertos_explained.md)
 
 ---
 
@@ -358,4 +358,4 @@ Memory utilization is tracked per-build using the PlatformIO build output. The f
 
 ---
 
-> **Navigation**: [ Back to README](../README.md) | [Hardware Wiring ](02_hardware_wiring.md) | [Bootloader ](03_bootloader.md) | [FreeRTOS App ](04_freertos_app.md)
+> **Navigation**: [ Back to README](../README.md) | [Hardware Wiring ](02_hardware_wiring.md) | [Bootloader ](04_secure_bootloader.md) | [FreeRTOS App ](03_freertos_explained.md)

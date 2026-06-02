@@ -531,4 +531,4 @@ Lowest   All off (distance > 30cm or sensor stopped)
 
 ---
 
-* [04: Secure Bootloader](04_secure_bootloader.md) | [06: Sensors & EXTI](06_sensors_exti.md) *
+* [04: Secure Bootloader](04_secure_bootloader.md) | [06: Sensors & EXTI](06_sensors_and_interrupts.md) *
