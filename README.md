@@ -207,7 +207,7 @@ cd STM32-FreeRTOS-Advanced-Embedded-System
 
 ### Step 2: Open Projects in PlatformIO
 
-This repository contains **two separate PlatformIO projects** — one for the bootloader and one for the application. They live in different Flash regions and must be compiled and flashed independently. PlatformIO requires each project to be opened as its own root folder; opening the parent directory will not work.
+This repository contains **two separate PlatformIO projects**: one for the bootloader and one for the application. They live in different Flash regions and must be compiled and flashed independently. PlatformIO requires each project to be opened as its own root folder; opening the parent directory will not work.
 
 Open each project in a **separate VS Code window**:
 
@@ -231,8 +231,8 @@ Quick wiring summary (see [`docs/02_hardware_wiring.md`](docs/02_hardware_wiring
 | Component | MCU Pin | Notes |
 |---|---|---|
 | HC-SR04 TRIG | PC7 | Direct connection (3.3V output, 5V device accepts it) |
-| HC-SR04 ECHO | PB6 | **Via 1k+2k voltage divider** — 5V -> 3.3V |
-| HC-SR04 VCC | 5V (CN7 pin 18) | Must be 5V — sensor won't work at 3.3V |
+| HC-SR04 ECHO | PB6 | **Via 1k+2k voltage divider**: 5V -> 3.3V |
+| HC-SR04 VCC | 5V (CN7 pin 18) | Must be 5V: sensor won't work at 3.3V |
 | HW-201 OUT | PA7 | Direct connection (sensor powered at 3.3V) |
 | LED1 (nearest) | PB4 | 220 ohm resistor to GND |
 | LED2 | PB5 | 220 ohm resistor to GND |
@@ -530,7 +530,7 @@ Full engineering documentation lives in the [`docs/`](docs/) folder:
 | [00 Index](docs/00_index.md) | Navigation hub: all 11 docs listed with descriptions and reading order |
 | [01 System Architecture](docs/01_system_architecture.md) | Full system map: all tasks, queues, ISRs, and how they connect |
 | [02 Hardware Wiring](docs/02_hardware_wiring.md) | Pin mapping, voltage divider circuit, breadboard wiring guide, signal timing |
-| [03 FreeRTOS Explained](docs/03_freertos_explained.md) | What tasks, queues, and priorities are — and why they exist |
+| [03 FreeRTOS Explained](docs/03_freertos_explained.md) | What tasks, queues, and priorities are: and why they exist |
 | [04 Secure Bootloader](docs/04_secure_bootloader.md) | How the bootloader verifies firmware with CRC32 and handles OTA updates |
 | [05 Hardware PWM](docs/05_hardware_pwm.md) | How hardware timers generate PWM and drive the LED bar graph |
 | [06 Sensors and Interrupts](docs/06_sensors_and_interrupts.md) | HC-SR04 physics, TIM5 microsecond stopwatch, EXTI interrupt architecture |
@@ -555,7 +555,7 @@ New to embedded systems? The [`LEARNING_PATH.md`](LEARNING_PATH.md) file gives y
 | 6 | Bootloader | Perform a full OTA update end-to-end |
 | 7 | CLI + extend | Add a new `uptime` command to the firmware |
 
-Not sure what a technical term means? The **[Glossary](docs/glossary.md)** defines every word used in this project — EXTI, VTOR, PSC, ISR, XMODEM, queue, shadow register, and more — in plain English.
+Not sure what a technical term means? The **[Glossary](docs/glossary.md)** defines every word used in this project: EXTI, VTOR, PSC, ISR, XMODEM, queue, shadow register, and more: in plain English.
 
 ---
 

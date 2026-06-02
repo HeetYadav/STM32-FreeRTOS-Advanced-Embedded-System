@@ -2,8 +2,8 @@
 
 Welcome to the full documentation suite for the **STM32 Advanced FreeRTOS Embedded System**. Every document is written to explain concepts from first principles while providing the depth needed for real-world understanding.
 
-> **New to embedded systems?** Start with the [Learning Path](../LEARNING_PATH.md) — it tells you exactly what to read, in what order, with milestone checkpoints at each stage.
-> **Don't know a term?** Check the [Glossary](glossary.md) — every technical word used in this repo is defined in plain language.
+> **New to embedded systems?** Start with the [Learning Path](../LEARNING_PATH.md): it tells you exactly what to read, in what order, with milestone checkpoints at each stage.
+> **Don't know a term?** Check the [Glossary](glossary.md): every technical word used in this repo is defined in plain language.
 
 ---
 
@@ -41,7 +41,7 @@ If you are new to embedded systems or FreeRTOS, follow this order:
 Flash memory map, boot sequence flowchart, FreeRTOS task diagram, interrupt routing table, queue communication map, memory usage figures.
 
 ### [02: Hardware Wiring](02_hardware_wiring.md)
-Full component list, complete pin-by-pin wiring table, power rail diagram, HC-SR04 voltage divider circuit (mandatory — 5V ECHO to 3.3V MCU), LED resistor values.
+Full component list, complete pin-by-pin wiring table, power rail diagram, HC-SR04 voltage divider circuit (mandatory: 5V ECHO to 3.3V MCU), LED resistor values.
 
 ### [03: FreeRTOS Explained](03_freertos_explained.md)
 RTOS fundamentals from scratch, all 5 tasks with priority/stack/blocking analysis, ISR-to-task communication pattern, queue message types.
