@@ -30,6 +30,7 @@
 - [Software & Tools](#-software--tools)
 - [Project Structure](#-project-structure)
 - [Documentation](#-documentation)
+- [Learning Path](#-learning-path)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -206,32 +207,66 @@ cd STM32-FreeRTOS-Advanced-Embedded-System
 
 ### Step 2: Open Projects in PlatformIO
 
-This repository contains **two separate PlatformIO projects**. Open each one individually in VS Code:
+This repository contains **two separate PlatformIO projects** — one for the bootloader and one for the application. They live in different Flash regions and must be compiled and flashed independently. PlatformIO requires each project to be opened as its own root folder; opening the parent directory will not work.
+
+Open each project in a **separate VS Code window**:
 
 ```
-File  Open Folder  SecureBootloader_L476
-File  Open Folder  FreeRTOS_App_L476
+File -> Open Folder -> SecureBootloader_L476    (bootloader project)
+File -> Open Folder -> FreeRTOS_App_L476         (application project)
 ```
+
+> [!NOTE]
+> If you see "No PlatformIO project found" after opening, make sure you opened the `SecureBootloader_L476` or `FreeRTOS_App_L476` subfolder directly, not the root `STM32-FreeRTOS-Advanced-Embedded-System` folder.
 
 ---
 
-### Step 3: Flash the Bootloader
+### Step 3: Wire the Hardware
+
+> [!CAUTION]
+> **Read this before connecting any wires.** The HC-SR04 ECHO pin outputs **5V**, but the STM32L476 GPIO is only 5V-tolerant on select pins. **PB6 (ECHO) requires a voltage divider** (1kΩ + 2kΩ) to step 5V down to 3.3V. Connecting ECHO directly to PB6 without the divider can permanently damage the MCU.
+
+Quick wiring summary (see [`docs/02_hardware_wiring.md`](docs/02_hardware_wiring.md) for the full diagram):
+
+| Component | MCU Pin | Notes |
+|---|---|---|
+| HC-SR04 TRIG | PC7 | Direct connection (3.3V output, 5V device accepts it) |
+| HC-SR04 ECHO | PB6 | **Via 1k+2k voltage divider** — 5V -> 3.3V |
+| HC-SR04 VCC | 5V (CN7 pin 18) | Must be 5V — sensor won't work at 3.3V |
+| HW-201 OUT | PA7 | Direct connection (sensor powered at 3.3V) |
+| LED1 (nearest) | PB4 | 220 ohm resistor to GND |
+| LED2 | PB5 | 220 ohm resistor to GND |
+| LED3 | PB3 | 220 ohm resistor to GND |
+| LED4 (farthest) | PA8 | 220 ohm resistor to GND |
+| External button | PB10 | One side to PB10, other side to GND |
+
+---
+
+### Step 4: Flash the Bootloader
 
 > [!IMPORTANT]
-> Flash the bootloader **first**. It must occupy `0x08000000`:`0x08007FFF` before the application is programmed.
+> Flash the bootloader **first**. It must occupy `0x08000000`-`0x08007FFF` before the application is programmed.
 
 1. Open the `SecureBootloader_L476` folder in VS Code (PlatformIO will auto-detect it)
 2. Connect your Nucleo board via USB
-3. Click **PlatformIO: Upload** (the  arrow in the bottom toolbar) or run:
+3. Click **PlatformIO: Upload** (the arrow in the bottom toolbar) or run:
 
 ```bash
 cd SecureBootloader_L476
 pio run --target upload
 ```
 
+Expected output:
+```
+Linking .pio/build/nucleo_l476rg/firmware.elf
+...
+** Programming Finished **
+** Verify OK **
+```
+
 ---
 
-### Step 4: Flash the Application
+### Step 5: Flash the Application
 
 The application uses a **post-build Python script** (`inject_crc.py`) that automatically computes CRC32 over the `.bin` file and patches the `AppHeader` struct before flashing. PlatformIO runs this automatically on build.
 
@@ -240,19 +275,22 @@ cd FreeRTOS_App_L476
 pio run --target upload
 ```
 
-Expected build output (truncated):
+Expected build output:
 
 ```
 Compiling .pio/build/nucleo_l476rg/src/main.o
 ...
 [POST-BUILD] Injecting CRC32 into AppHeader @ offset 0x188...
-[POST-BUILD] CRC = 0xA3F72C11  
+[POST-BUILD] CRC = 0xA3F72C11
 === [SUCCESS] Took 8.34 seconds ===
 ```
 
+> [!IMPORTANT]
+> If you do NOT see the `[POST-BUILD] Injecting CRC32` line, the CRC was not patched. The bootloader will reject the firmware and enter OTA mode on next boot. Ensure Python 3 is installed and added to your system PATH.
+
 ---
 
-### Step 5: Open the Serial Terminal
+### Step 6: Open the Serial Terminal
 
 Connect with any serial terminal at **115200 baud, 8N1** (e.g., Tera Term, PuTTY, VS Code Serial Monitor):
 
@@ -446,41 +484,39 @@ Splitting firmware into two independent PlatformIO projects with a hard Flash bo
 
 ```
 STM32-FreeRTOS-Advanced-Embedded-System/
-
- README.md                           You are here
-
- docs/                               Full documentation (see links below)
-    bootloader.md                   Bootloader deep-dive: design, flow, CRC, XMODEM
-    freertos_app.md                 FreeRTOS app: all 5 tasks, queues, priorities
-    hardware_wiring.md              Pin mapping, schematic description, photos
-    ota_update_guide.md             Step-by-step XMODEM OTA walkthrough
-    bugs_and_fixes.md              Detailed bug post-mortems with register-level analysis
-
- SecureBootloader_L476/              PlatformIO Project 1: Secure Bootloader
-    platformio.ini                  Build config: flash offset 0x0, linker script
-    src/
-        main.c                      All bootloader logic (GPIO, CRC, XMODEM, Flash)
-
- FreeRTOS_App_L476/                  PlatformIO Project 2: FreeRTOS Application
-     platformio.ini                  Build config: flash offset 0x8000, post-build script
-     src/
-         main.c                      FreeRTOS init, task creation, peripheral setup
-         tasks/
-            heartbeat_task.c        HeartbeatTask: PA5 toggle every 1 s
-            button_monitor_task.c   ButtonMonitorTask: PC13 cascade, PB10 flash
-            terminal_task.c         TerminalTask: CLI parser, command dispatch
-            sensor_task.c           SensorTask: HC-SR04 trigger, echo timing, queue
-            led_controller_task.c   LEDControllerTask: PWM fading, IR blink override
-         isr/
-            stm32l4xx_it.c          EXTI9_5 (ECHO/IR), UART1 RX ISRs
-         drivers/
-            hcsr04.c                HC-SR04 driver: TIM5 microsecond timing
-            hw201.c                 HW-201 IR driver: EXTI interrupt handler
-            pwm_leds.c              PWM LED driver: TIM1/2/3 init, duty cycle API
-         cli/
-            cli_parser.c            Command string parser and dispatcher
-         scripts/
-             inject_crc.py           Post-build: computes CRC32, patches binary
+|
++-- README.md                            You are here
++-- CHANGELOG.md                         Version history and bug fixes
++-- CONTRIBUTING.md                      How to contribute
++-- LICENSE                              MIT License
++-- .gitignore
+|
++-- docs/                                11 deep-dive documentation files
+|   +-- 00_index.md                      Navigation hub: all docs listed and linked
+|   +-- 01_system_architecture.md        Full system overview: tasks, queues, ISRs
+|   +-- 02_hardware_wiring.md            Pin mapping, voltage divider, wiring guide
+|   +-- 03_freertos_explained.md         FreeRTOS concepts: tasks, queues, priorities
+|   +-- 04_secure_bootloader.md          Bootloader: CRC, XMODEM, Flash, VTOR, MSP
+|   +-- 05_hardware_pwm.md               PWM: timer config, duty cycle, fading algo
+|   +-- 06_sensors_and_interrupts.md     HC-SR04, HW-201, EXTI, TIM5 stopwatch
+|   +-- 07_ota_xmodem.md                 XMODEM protocol, OTA flow, troubleshooting
+|   +-- 08_cli_terminal.md               UART CLI: interrupt-driven RX, command parse
+|   +-- 09_performance_analysis.md       Stack usage, CPU load, ISR latency numbers
+|   +-- 10_troubleshooting.md            Common problems and their fixes
+|
++-- SecureBootloader_L476/               PlatformIO Project 1: Secure Bootloader
+|   +-- platformio.ini                   Build config: flash origin 0x08000000
+|   +-- src/
+|       +-- main.c                       All bootloader logic (GPIO, CRC, XMODEM, Flash)
+|   +-- README.md                        Bootloader sub-project readme
+|
++-- FreeRTOS_App_L476/                   PlatformIO Project 2: FreeRTOS Application
+    +-- platformio.ini                   Build config: flash origin 0x08008000
+    +-- src/
+    |   +-- main.c                       All FreeRTOS tasks, ISRs, peripheral init
+    +-- scripts/
+    |   +-- inject_crc.py                Post-build: computes CRC32, patches .bin
+    +-- README.md                        Application sub-project readme
 ```
 
 ---
@@ -489,13 +525,37 @@ STM32-FreeRTOS-Advanced-Embedded-System/
 
 Full engineering documentation lives in the [`docs/`](docs/) folder:
 
-| Document | Description |
+| Document | What You Will Learn |
 |---|---|
-| [ Bootloader Deep-Dive](docs/bootloader.md) | Complete walkthrough of SecureBootloader_L476: boot decision logic, STM32 CRC peripheral usage, XMODEM-CRC protocol implementation, Flash erase/program sequence, VTOR/MSP jump sequence |
-| [ FreeRTOS Application](docs/freertos_app.md) | All 5 tasks documented: priorities, stack sizes, timing, inter-task communication via queues; distance-to-LED mapping algorithm; IR override logic |
-| [ Hardware Wiring Guide](docs/hardware_wiring.md) | Complete pin mapping tables, breadboard wiring guide, signal timing diagrams for HC-SR04 and HW-201, photo placeholders |
-| [ OTA Update Guide](docs/ota_update_guide.md) | Step-by-step XMODEM OTA guide with screenshots, troubleshooting common failures (NAK loops, timeout, incomplete transfer) |
-| [ Bugs & Engineering Fixes](docs/bugs_and_fixes.md) | Detailed post-mortems: unaligned access HardFault, TIM2 PSC shadow register, TIM2/TIM5 conflict resolution: all with register-level analysis |
+| [00 Index](docs/00_index.md) | Navigation hub: all 11 docs listed with descriptions and reading order |
+| [01 System Architecture](docs/01_system_architecture.md) | Full system map: all tasks, queues, ISRs, and how they connect |
+| [02 Hardware Wiring](docs/02_hardware_wiring.md) | Pin mapping, voltage divider circuit, breadboard wiring guide, signal timing |
+| [03 FreeRTOS Explained](docs/03_freertos_explained.md) | What tasks, queues, and priorities are — and why they exist |
+| [04 Secure Bootloader](docs/04_secure_bootloader.md) | How the bootloader verifies firmware with CRC32 and handles OTA updates |
+| [05 Hardware PWM](docs/05_hardware_pwm.md) | How hardware timers generate PWM and drive the LED bar graph |
+| [06 Sensors and Interrupts](docs/06_sensors_and_interrupts.md) | HC-SR04 physics, TIM5 microsecond stopwatch, EXTI interrupt architecture |
+| [07 OTA XMODEM](docs/07_ota_xmodem.md) | The XMODEM-CRC protocol explained step by step with the actual implementation |
+| [08 CLI Terminal](docs/08_cli_terminal.md) | How interrupt-driven UART + FreeRTOS queue builds a real serial CLI |
+| [09 Performance Analysis](docs/09_performance_analysis.md) | Stack usage, CPU load estimate, ISR latency measurements |
+| [10 Troubleshooting](docs/10_troubleshooting.md) | Every common failure mode and how to fix it |
+
+---
+
+##  Learning Path
+
+New to embedded systems? The [`LEARNING_PATH.md`](LEARNING_PATH.md) file gives you a structured **7-stage journey** through this entire project:
+
+| Stage | Focus | Milestone |
+|---|---|---|
+| 1 | System overview | Can you draw the task/queue diagram from memory? |
+| 2 | Hardware setup | Wire it up, flash it, see sensor readings |
+| 3 | FreeRTOS | Trace a sensor reading from ISR to LED change |
+| 4 | Sensors & interrupts | Understand the 4cm shadow register bug |
+| 5 | Hardware PWM | Calculate PWM frequency from PSC and ARR |
+| 6 | Bootloader | Perform a full OTA update end-to-end |
+| 7 | CLI + extend | Add a new `uptime` command to the firmware |
+
+Not sure what a technical term means? The **[Glossary](docs/glossary.md)** defines every word used in this project — EXTI, VTOR, PSC, ISR, XMODEM, queue, shadow register, and more — in plain English.
 
 ---
 
