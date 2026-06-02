@@ -57,16 +57,16 @@ The STM32L476RG has **1 MB of flash** organized as 2 banks  256 pages  2 KB/page
 block-beta
   columns 1
 
-  block:flash[" STM32L476RG Flash: 1MB (0x08000000  0x080FFFFF)"]:
+  block:flash[" STM32L476RG Flash: 1MB (0x08000000 -> 0x080FFFFF)"]
     columns 1
 
-    boot[" BOOTLOADER: 32 KB (Pages 0:15)\n0x08000000  0x08007FFF\nSecureBootloader_L476\nNever erased by OTA"]
+    boot[" BOOTLOADER: 32 KB (Pages 0:15)\n0x08000000 -> 0x08007FFF\nSecureBootloader_L476\nNever erased by OTA"]
 
-    vt[" APP VECTOR TABLE: 384 bytes\n0x08008000  0x0800817F\nSCB->VTOR set here at jump time\n(Stack pointer, Reset_Handler, all IRQ vectors)"]
+    vt[" APP VECTOR TABLE: 384 bytes\n0x08008000 -> 0x0800817F\nSCB->VTOR set here at jump time\n(Stack pointer, Reset_Handler, all IRQ vectors)"]
 
-    hdr[" APP HEADER (AppHeader struct): 20 bytes\n0x08008188  0x0800819B\nmagic: 0xAA55AA55\ncrc32: computed by inject_crc.py\nlength: binary size in bytes\nversion: firmware version word"]
+    hdr[" APP HEADER (AppHeader struct): 20 bytes\n0x08008188 -> 0x0800819B\nmagic: 0xAA55AA55\ncrc32: computed by inject_crc.py\nlength: binary size in bytes\nversion: firmware version word"]
 
-    app[" APP CODE + DATA: ~19 KB used\n0x080081A0  end of used flash\nFreeRTOS_App_L476\nAll tasks, drivers, HAL, FreeRTOS kernel"]
+    app[" APP CODE + DATA: ~19 KB used\n0x080081A0 -> end of used flash\nFreeRTOS_App_L476\nAll tasks, drivers, HAL, FreeRTOS kernel"]
 
     free[" FREE FLASH: ~950 KB available\nErased by OTA before reprogramming\nAvailable for future app growth\nor data logging (EEPROM emulation)"]
   end
